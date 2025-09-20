@@ -1,5 +1,9 @@
-# Custom
+# Build files
 build/*
+
+# Latex
+*.aux
+*.log
 
 # Prerequisites
 *.d

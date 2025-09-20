@@ -8,7 +8,3 @@ add_executable(solver ${sources})
 
 target_compile_options(solver PUBLIC -std=c99 -Wall)
 target_include_directories(solver PUBLIC include)
-
-if (COMPILE_DOC)
-  execute_process(COMMAND pandoc -o ../concept.pdf ../doc/concept.md)
-endif()

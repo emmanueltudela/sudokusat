@@ -1,4 +1,4 @@
-# sudokusolver
+# SudokuSolver
 
 A Sudoku solver written in c, implemented using SAT reduction.
 
@@ -9,7 +9,7 @@ Read the concept of my implementation [here](concept.pdf)
 - gcc
 - make
 - cmake
-- *pandoc (If you want to compile the doc)*
+- *texlive (If you want to compile the doc)*
 
 ## How to build
 ``` bash
@@ -19,4 +19,4 @@ cmake ..
 make
 ```
 
-> If you want to compile de doc use `cmake .. -DCOMPILE_DOC`
+> If you want to compile de doc use `./doc_compile.sh`
