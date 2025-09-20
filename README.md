@@ -17,3 +17,5 @@ cd build
 cmake ..
 make
 ```
+
+> If you want to compile de doc use `cmake .. -DCOMPILE_DOC`
