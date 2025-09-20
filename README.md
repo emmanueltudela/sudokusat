@@ -9,6 +9,7 @@ Read the [explanation](concept.pdf)
 - gcc
 - make
 - cmake
+- *pandoc (If you want to compile the doc)*
 
 ## How to build
 ``` bash
