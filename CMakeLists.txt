@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.30)
 project(sudokusolver)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 file(GLOB_RECURSE sources       src/*.c include/*.h)
 file(GLOB_RECURSE sources_test  test/*.c)
 

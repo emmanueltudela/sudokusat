@@ -9,7 +9,6 @@ Read the concept of my implementation [here](concept.pdf)
 - gcc
 - make
 - cmake
-- *texlive (If you want to compile the doc)*
 
 ## How to build
 ``` bash
@@ -18,5 +17,3 @@ cd build
 cmake ..
 make
 ```
-
-> If you want to compile de doc use `./doc_compile.sh`

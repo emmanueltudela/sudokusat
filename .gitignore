@@ -1,5 +1,7 @@
 # Build files
 build/*
+compile_commands.json
+.cache/*
 
 # Latex
 *.aux
