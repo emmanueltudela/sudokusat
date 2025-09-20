@@ -3,7 +3,7 @@
 Simple efficient and flexible sudoku solver
 
 ## Concept
-Read the [explanation](doc/concept.pdf)
+Read the [explanation](concept.pdf)
 
 ## How to build
 ``` bash
