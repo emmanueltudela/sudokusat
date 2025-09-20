@@ -3,7 +3,7 @@
 Simple efficient and flexible sudoku solver
 
 ## Concept
-Read the [explanation](concept.pdf)
+Read the concept of my implementation [here](concept.pdf)
 
 ## Dependencies
 - gcc
