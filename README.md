@@ -1,6 +1,6 @@
 # sudokusolver
 
-Simple efficient and flexible sudoku solver
+A Sudoku solver written in c, implemented using SAT reduction.
 
 ## Concept
 Read the concept of my implementation [here](concept.pdf)
