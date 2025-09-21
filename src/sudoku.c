@@ -149,6 +149,8 @@ s_sudoku s_sudoku_read(char *filename) {
   s_sudoku_add_rules(sud, cells, rules, number_of_rules);
   free(rules);
   free(cells);
+  free(line);
+  fclose(file);
   return sud;
 }
 
