@@ -8,7 +8,6 @@
 s_cnf s_cnf_create() {
   s_cnf cn = malloc(sizeof(struct cnf));
   if (!cn) return NULL;
-  printf("caca\n");
   cn->clauses = NULL;
   cn->len = 0;
   cn->size = 0;

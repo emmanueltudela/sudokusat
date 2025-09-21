@@ -1,11 +1,44 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
 
 #include "sudoku.h"
 #include "cnf.h"
 
-int main(void) {
-  s_sudoku sud = s_sudoku_create(9);
+void usage(char *exec) {
+  printf("%s -h : displays this menu\n", exec);
+  printf("%s -f filename : load sudoku using given file\n\t(see data/sudoku.txt for an example or read include/sudoku.h\n\tto see a description of the format)\n", exec);
+}
+
+int main(int argc, char **argv) {
+  char *filename = NULL;
+
+  if (argc != 1) {
+    if (strcmp(argv[1], "-h") == 0) {
+      usage(argv[0]);
+      exit(EXIT_SUCCESS);
+    } else if (strcmp(argv[1], "-f") == 0) {
+      if (argc != 3) {
+        usage(argv[0]);
+        exit(EXIT_FAILURE);
+      }
+      filename = argv[2];
+    }
+  }
+
+  s_sudoku sud = NULL;
+
+  if (filename) {
+    sud = s_sudoku_read(filename);
+    if (!sud) {
+      fprintf(stderr, "Could not open %s or invalid file format\n", filename);
+      exit(EXIT_FAILURE);
+    }
+  } else {
+    sud = s_sudoku_create(9);
+  }
+
   s_sudoku_print(sud);
 
   s_cnf cn = s_cnf_create();

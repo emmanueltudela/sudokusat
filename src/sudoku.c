@@ -1,5 +1,9 @@
+#define _POSIX_C_SOURCE 200809L
+
 #include <stdio.h>
 #include <string.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #include "sudoku.h"
 #include "cnf.h"
@@ -102,6 +106,50 @@ void s_sudoku_print(s_sudoku sud) {
     printf("\n");
 
   }
+}
+
+s_sudoku s_sudoku_read(char *filename) {
+  FILE *file = fopen(filename, "r");
+  if (!file) return NULL;
+
+  char *line = NULL;
+  size_t r = 0;
+
+  // Size of grid
+  getline(&line, &r, file);
+  if (r <= 0) return NULL;
+  size_t n = atoi(line);
+
+  // Nb of rules
+  getline(&line, &r, file);
+  if (r <= 0) return NULL;
+  size_t number_of_rules = atoi(line);
+
+  s_sudoku sud = s_sudoku_create(n);
+
+  int *rules = malloc(sizeof(int) * number_of_rules);
+  int *cells = malloc(sizeof(int) * number_of_rules);
+
+  for (int rule_i = 0; rule_i < number_of_rules; rule_i++) {
+    int rule[3]; // {i, j, v}
+
+    // Get all three values on the three following lines
+    for (int i = 0; i < 3; i++) {
+      if (getline(&line, &r, file) <= 0) {
+        free(sud);
+        return NULL;
+      }
+      rule[i] = atoi(line);
+    }
+
+    rules[rule_i] = rule[2]; // For this rule the cell cells[rule_i] must contain v
+    cells[rule_i] = s_sudoku_coords_to_index(sud, rule[0], rule[1]); // The cell targeted by the rule is stored
+  }
+
+  s_sudoku_add_rules(sud, cells, rules, number_of_rules);
+  free(rules);
+  free(cells);
+  return sud;
 }
 
 s_cnf s_sudoku_to_cnf(s_sudoku sud) {
