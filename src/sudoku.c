@@ -33,8 +33,19 @@ void s_rules_free(s_rules s_rul) {
   free(s_rul);
 }
 
+// Set every grid cell to 0
+void s_sudoku_reset(s_sudoku sud) {
+  if (!sud) return;
+
+  for (int i = 0; i < sud->n * sud->n; i++) {
+    sud->arr[i] = 0;
+  }
+}
+
 void s_sudoku_apply_rules(s_sudoku sud) {
   if (!sud || !sud->rules) return;
+
+  s_sudoku_reset(sud);
 
   for (int i = 0; i < sud->rules->len; i++) {
     int cell = sud->rules->cells[i];
