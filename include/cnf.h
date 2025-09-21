@@ -28,7 +28,7 @@ s_cnf s_cnf_create();
 // Frees the cnf struct
 void s_cnf_free(s_cnf cn);
 
-// Add a clause to the cnf (Return EXIT_FAILURE if failed EXIT_SUCCESS otherwise)
+// Add a clause to the cnf (Return -1 if failed 0 otherwise)
 int s_cnf_add_clause(s_cnf cn, int *litt, size_t len);
 
 

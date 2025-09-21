@@ -47,7 +47,7 @@ void s_cnf_free(s_cnf cn) {
 }
 
 int s_cnf_add_clause(s_cnf cn, int *litt, size_t len) {
-  if (!cn || !litt) return EXIT_FAILURE;
+  if (!cn || !litt) return -1;
 
   // Realloc the array of clauses if needed
   if (cn->len >= cn->size) {
@@ -58,22 +58,22 @@ int s_cnf_add_clause(s_cnf cn, int *litt, size_t len) {
       cn->size *= 2;
 
     cn->clauses = realloc(cn->clauses, cn->size * sizeof(s_clause));
-    if (!cn->clauses) return EXIT_FAILURE;
+    if (!cn->clauses) return -1;
   }
 
   // Make a copy of the given litterals
   int *l = malloc(sizeof(int) * len);
-  if (!l) return EXIT_FAILURE;
+  if (!l) return 1;
   memcpy(l, litt, len * sizeof(int));
 
   // Create a new clause
   s_clause cl = s_clause_create(l, len);
-  if (!cl) return EXIT_FAILURE;
+  if (!cl) return -1;
 
   // Append
   cn->clauses[cn->len] = cl;
   cn->len += 1;
-  return EXIT_SUCCESS;
+  return 0;
 }
 
 
