@@ -178,7 +178,10 @@ void s_sudoku_print(s_sudoku sud) {
         printf("┊");
       }
 
-      printf(" %d ", sud->arr[ind]);
+      if (sud->arr[ind] != 0)
+        printf(" %d ", sud->arr[ind]);
+      else
+        printf("   ");
     }
 
     // Horizontal separation
