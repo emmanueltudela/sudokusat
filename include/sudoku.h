@@ -3,6 +3,8 @@
 
 #include <stdlib.h>
 
+#include "cnf.h"
+
 // Represents the initial rules of
 // a grid
 typedef struct rules {
@@ -41,5 +43,8 @@ void s_sudoku_print(s_sudoku sud);
 
 
 // SAT functions
+
+// Returns a cnf formula describing constraints of grid
+s_cnf s_sudoku_to_cnf(s_sudoku sud);
 
 #endif
