@@ -5,17 +5,10 @@
 
 #include "cnf.h"
 
-s_cnf s_cnf_create() {
-  s_cnf cn = malloc(sizeof(struct cnf));
-  if (!cn) return NULL;
-  cn->clauses = NULL;
-  cn->len = 0;
-  cn->size = 0;
-  return cn;
-}
 
 // ==== PRIVATE ====
 
+// Create a new clause
 s_clause s_clause_create(int *litt, size_t len) {
   s_clause cl = malloc(sizeof(struct clause));
   if (!cl) return NULL;
@@ -25,7 +18,33 @@ s_clause s_clause_create(int *litt, size_t len) {
   return cl;
 }
 
+// Frees a clause
+void s_clause_free(s_clause cl) {
+  free(cl->litt);
+  free(cl);
+}
+
 // =================
+
+
+// Base functions
+
+s_cnf s_cnf_create() {
+  s_cnf cn = malloc(sizeof(struct cnf));
+  if (!cn) return NULL;
+  cn->clauses = NULL;
+  cn->len = 0;
+  cn->size = 0;
+  return cn;
+}
+
+void s_cnf_free(s_cnf cn) {
+  for (int i = 0; i < cn->len; i++) {
+    s_clause_free(cn->clauses[i]);
+  }
+  free(cn->clauses);
+  free(cn);
+}
 
 int s_cnf_add_clause(s_cnf cn, int *litt, size_t len) {
   if (!cn || !litt) return EXIT_FAILURE;
@@ -57,18 +76,8 @@ int s_cnf_add_clause(s_cnf cn, int *litt, size_t len) {
   return EXIT_SUCCESS;
 }
 
-void s_clause_free(s_clause cl) {
-  free(cl->litt);
-  free(cl);
-}
 
-void s_cnf_free(s_cnf cn) {
-  for (int i = 0; i < cn->len; i++) {
-    s_clause_free(cn->clauses[i]);
-  }
-  free(cn->clauses);
-  free(cn);
-}
+// Utility functions
 
 void s_cnf_print(s_cnf cn) {
   for (int i = 0; i < cn->len; i++) {

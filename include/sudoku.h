@@ -5,6 +5,9 @@
 
 #include "cnf.h"
 
+
+// Structs
+
 // Represents the initial rules of
 // a grid
 typedef struct rules {
@@ -26,6 +29,17 @@ typedef struct sudoku {
 // Returns a sudoku struct of size nxn
 s_sudoku s_sudoku_create(size_t n);
 
+/* Reads and create a sudoku struct from a file
+ * The first line must contain the size n of the grid
+ * The second line must contain the number of rules
+ * The next lines describe the starting conditions of the grid following this scheme
+ *      i -- this is the index of the target line
+ *      j -- this is the index of the target column
+ *      v -- this is the value to put in the cell (must be <= n)
+ * each on a new line there must be no excess line break
+ */
+s_sudoku s_sudoku_read(char *filename);
+
 // Free a sudoku and it's rules (if defined)
 void s_sudoku_free(s_sudoku sud);
 
@@ -41,17 +55,6 @@ size_t s_sudoku_coords_to_index(s_sudoku sud, size_t i, size_t j);
 
 // Prints a grid of sudoku
 void s_sudoku_print(s_sudoku sud);
-
-/* Reads and create a sudoku struct from a file
- * The first line must contain the size n of the grid
- * The second line must contain the number of rules
- * The next lines describe the starting conditions of the grid following this scheme
- *      i -- this is the index of the target line
- *      j -- this is the index of the target column
- *      v -- this is the value to put in the cell (must be <= n)
- * each on a new line there must be no excess line break
- */
-s_sudoku s_sudoku_read(char *filename);
 
 
 // SAT functions

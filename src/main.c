@@ -14,6 +14,7 @@ void usage(char *exec) {
 int main(int argc, char **argv) {
   char *filename = NULL;
 
+  // Handle arguments
   if (argc != 1) {
     if (strcmp(argv[1], "-h") == 0) {
       usage(argv[0]);
@@ -29,6 +30,7 @@ int main(int argc, char **argv) {
 
   s_sudoku sud = NULL;
 
+  // Load grid from file or create a default empty grid
   if (filename) {
     sud = s_sudoku_read(filename);
     if (!sud) {
@@ -38,6 +40,8 @@ int main(int argc, char **argv) {
   } else {
     sud = s_sudoku_create(9);
   }
+
+  // Temporary tests
 
   s_sudoku_print(sud);
 
