@@ -34,7 +34,7 @@ int s_cnf_add_clause(s_cnf cn, int *litt, size_t len);
 
 // Utility functions
 
-// Print cnf formula
+// Print pretty cnf formula
 void s_cnf_print(s_cnf cn);
 
 #endif
