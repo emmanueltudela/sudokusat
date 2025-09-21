@@ -29,8 +29,9 @@ s_sudoku s_sudoku_create(size_t n);
 // Free a sudoku and it's rules (if defined)
 void s_sudoku_free(s_sudoku sud);
 
-// Add a set of n rules to sudoku grid sud (see s_rules for explanaition of cells and rules
-void s_sudoku_add_rules(s_sudoku sud, int *cells, int *rules, size_t n);
+// Set n rules for sudoku grid sud (see s_rules for explanaition of cells and rules
+// Also modify the grid to show the rules used
+void s_sudoku_set_rules(s_sudoku sud, int *cells, int *rules, size_t n);
 
 
 // Utility functions

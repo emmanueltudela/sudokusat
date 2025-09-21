@@ -27,9 +27,10 @@ s_sudoku s_sudoku_create(size_t n) {
   return g;
 }
 
-void s_sudoku_add_rules(s_sudoku sud, int *cells, int *rules, size_t n) {
+void s_sudoku_set_rules(s_sudoku sud, int *cells, int *rules, size_t n) {
   if (!sud) return;
 
+  // Create a new rule struct
   s_rules s_rul = (s_rules)malloc(sizeof(struct rules));
   if (!s_rul) return;
 
@@ -146,7 +147,7 @@ s_sudoku s_sudoku_read(char *filename) {
     cells[rule_i] = s_sudoku_coords_to_index(sud, rule[0], rule[1]); // The cell targeted by the rule is stored
   }
 
-  s_sudoku_add_rules(sud, cells, rules, number_of_rules);
+  s_sudoku_set_rules(sud, cells, rules, number_of_rules);
   free(rules);
   free(cells);
   free(line);
