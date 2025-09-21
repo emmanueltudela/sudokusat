@@ -103,3 +103,8 @@ void s_sudoku_print(s_sudoku sud) {
 
   }
 }
+
+s_cnf s_sudoku_to_cnf(s_sudoku sud) {
+  // TODO
+  return NULL;
+}
