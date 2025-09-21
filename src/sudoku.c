@@ -27,6 +27,12 @@ s_sudoku s_sudoku_create(size_t n) {
   return g;
 }
 
+void s_rules_free(s_rules s_rul) {
+  free(s_rul->cells);
+  free(s_rul->rules);
+  free(s_rul);
+}
+
 void s_sudoku_set_rules(s_sudoku sud, int *cells, int *rules, size_t n) {
   if (!sud) return;
 
@@ -53,13 +59,9 @@ void s_sudoku_set_rules(s_sudoku sud, int *cells, int *rules, size_t n) {
   s_rul->cells = cel;
   s_rul->rules = rul;
   s_rul->len = n;
-  sud->rules = s_rul;
-}
 
-void s_rules_free(s_rules s_rul) {
-  free(s_rul->cells);
-  free(s_rul->rules);
-  free(s_rul);
+  if (sud->rules) s_rules_free(sud->rules);
+  sud->rules = s_rul;
 }
 
 void s_sudoku_free(s_sudoku sud) {
