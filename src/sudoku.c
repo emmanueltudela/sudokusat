@@ -33,6 +33,16 @@ void s_rules_free(s_rules s_rul) {
   free(s_rul);
 }
 
+void s_sudoku_apply_rules(s_sudoku sud) {
+  if (!sud || !sud->rules) return;
+
+  for (int i = 0; i < sud->rules->len; i++) {
+    int cell = sud->rules->cells[i];
+    int rule = sud->rules->rules[i];
+    sud->arr[cell] = rule;
+  }
+}
+
 void s_sudoku_set_rules(s_sudoku sud, int *cells, int *rules, size_t n) {
   if (!sud) return;
 
@@ -40,6 +50,7 @@ void s_sudoku_set_rules(s_sudoku sud, int *cells, int *rules, size_t n) {
   s_rules s_rul = (s_rules)malloc(sizeof(struct rules));
   if (!s_rul) return;
 
+  // Copy the given cells and rules
   int *cel = (int *)malloc(sizeof(int)*n);
   if (!cel) {
     free(s_rul);
@@ -56,12 +67,17 @@ void s_sudoku_set_rules(s_sudoku sud, int *cells, int *rules, size_t n) {
   memcpy(cel, cells, n * sizeof(int));
   memcpy(rul, rules, n * sizeof(int));
 
+  // Set the new rules struct
   s_rul->cells = cel;
   s_rul->rules = rul;
   s_rul->len = n;
 
+  // Change the set of rules and frees the last if needed
   if (sud->rules) s_rules_free(sud->rules);
   sud->rules = s_rul;
+
+  // Apply the rules to the grid (Only to be able to display the grid with the rules)
+  s_sudoku_apply_rules(sud);
 }
 
 void s_sudoku_free(s_sudoku sud) {
