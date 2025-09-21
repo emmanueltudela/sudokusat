@@ -9,7 +9,7 @@ s_sudoku s_sudoku_create(size_t n) {
 
   int *arr = malloc(sizeof(int) * n*n);
   if (!arr) {
-    free(NULL);
+    free(g);
     return NULL;
   }
 
@@ -38,8 +38,8 @@ void s_sudoku_add_rules(s_sudoku sud, int *cells, int *rules, size_t n) {
     return;
   }
 
-  memcpy(cel, cells, n);
-  memcpy(rul, rules, n);
+  memcpy(cel, cells, n * sizeof(int));
+  memcpy(rul, rules, n * sizeof(int));
 
   s_rul->cells = cel;
   s_rul->rules = rul;
@@ -56,6 +56,7 @@ void s_rules_free(s_rules s_rul) {
 void s_sudoku_free(s_sudoku sud) {
   free(sud->arr);
   if (sud->rules) s_rules_free(sud->rules);
+  free(sud);
 }
 
 size_t s_sudoku_coords_to_index(s_sudoku sud, size_t i, size_t j) {

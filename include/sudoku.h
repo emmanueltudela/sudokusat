@@ -39,4 +39,7 @@ size_t s_sudoku_coords_to_index(s_sudoku sud, size_t i, size_t j);
 // Prints a grid of sudoku
 void s_sudoku_print(s_sudoku sud);
 
+
+// SAT functions
+
 #endif
