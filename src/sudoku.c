@@ -2,8 +2,12 @@
 #include <string.h>
 
 #include "sudoku.h"
+#include "cnf.h"
 
 s_sudoku s_sudoku_create(size_t n) {
+  // Must be divisible by 3
+  if (n % 3 != 0) return NULL;
+
   s_sudoku g = (s_sudoku)malloc(sizeof(struct sudoku));
   if (!g) return NULL;
 
