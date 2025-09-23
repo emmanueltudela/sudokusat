@@ -53,6 +53,11 @@ void s_sudoku_set_rules(s_sudoku sud, int *cells, int *rules, size_t n);
 // Returns the index in sudoku grid corresponding to line i and col j
 size_t s_sudoku_coords_to_index(s_sudoku sud, size_t i, size_t j);
 
+// Puts the line i and col j in associated with sudoku grid index in the matching pointers
+// i and j must be valid pointers
+// The function will return 0 on success and -1 on failure
+int s_sudoku_index_to_coords(s_sudoku sud, size_t index, size_t *i, size_t *j);
+
 // Prints a pretty grid of sudoku
 void s_sudoku_print(s_sudoku sud);
 

@@ -45,11 +45,12 @@ int main(int argc, char **argv) {
 
   s_sudoku_print(sud);
 
-  s_cnf cn = s_cnf_create();
-  int litt1[] = {1, 2, 3};
-  int litt2[] = {-2, 3, -1};
-  s_cnf_add_clause(cn, litt1, 3);
-  s_cnf_add_clause(cn, litt2, 3);
+  // s_cnf cn = s_cnf_create();
+  // int litt1[] = {1, 2, 3};
+  // int litt2[] = {-2, 3, -1};
+  // s_cnf_add_clause(cn, litt1, 3);
+  // s_cnf_add_clause(cn, litt2, 3);
+  s_cnf cn = s_sudoku_to_cnf(sud);
   s_cnf_print(cn);
 
   s_sudoku_free(sud);

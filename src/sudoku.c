@@ -89,17 +89,17 @@ s_sudoku s_sudoku_read(char *filename) {
   for (int rule_i = 0; rule_i < number_of_rules; rule_i++) {
     int rule[3]; // {i, j, v}
 
-    // Get all three values on the three following lines
-    for (int i = 0; i < 3; i++) {
-      if (getline(&line, &r, file) <= 0) {
-        free(sud);
-        return NULL;
-      }
-      rule[i] = atoi(line);
+  // Get all three values on the three following lines
+  for (int i = 0; i < 3; i++) {
+    if (getline(&line, &r, file) <= 0) {
+      free(sud);
+      return NULL;
     }
+    rule[i] = atoi(line);
+  }
 
-    rules[rule_i] = rule[2]; // For this rule the cell cells[rule_i] must contain v
-    cells[rule_i] = s_sudoku_coords_to_index(sud, rule[0], rule[1]); // The cell targeted by the rule is stored
+  rules[rule_i] = rule[2]; // For this rule the cell cells[rule_i] must contain v
+  cells[rule_i] = s_sudoku_coords_to_index(sud, rule[0], rule[1]); // The cell targeted by the rule is stored
   }
 
   s_sudoku_set_rules(sud, cells, rules, number_of_rules);
@@ -161,6 +161,13 @@ size_t s_sudoku_coords_to_index(s_sudoku sud, size_t i, size_t j) {
   return i * sud->n + j;
 }
 
+int s_sudoku_index_to_coords(s_sudoku sud, size_t index, size_t *i, size_t *j) {
+  if (!i || !j || index >= sud->n * sud->n) return -1;
+  *j = index % sud->n;
+  *i = (index - *j) / sud->n;
+  return 0;
+}
+
 void s_sudoku_print(s_sudoku sud) {
   if (!sud) return;
 
@@ -203,7 +210,112 @@ void s_sudoku_print(s_sudoku sud) {
 
 // SAT functions
 
+// ===== PRIVATE =====
+
+// Takes the coords of a cell in a sudoku grid and a value
+// This function will return a unique number for this combination
+//    The goal is to represent the var x(ij, v) which represents
+//    the variable in a sat formula.
+int s_sudoku_sat_encode_litt(s_sudoku sud, size_t i, size_t j, size_t v) {
+  int index = s_sudoku_coords_to_index(sud, i, j);
+  return index * sud->n + v;
+}
+
+// Takes a var number in sat formula and returns the matching cell and value
+// by putting them in the matching pointers
+//    The pointers must be valid
+//    The function returns 0 on success and -1 on failure
+int s_sudoku_sat_decode_litt(s_sudoku sud, int litt, size_t *i, size_t *j, size_t *v) {
+  if (!i || !j || !v) return -1;
+  *v = litt % sud->n;
+  int ind = (litt - *v) / sud->n;
+  s_sudoku_index_to_coords(sud, ind, i, j);
+  return 0;
+}
+
+
+// ===================
+
 s_cnf s_sudoku_to_cnf(s_sudoku sud) {
-  // TODO
-  return NULL;
+  s_cnf cn = s_cnf_create();
+  if (!cn) return NULL;
+
+  // Sud constraints are respected
+  for (int i = 0; i < sud->rules->len; i++) {
+    int cell = sud->rules->cells[i];
+    int v = sud->rules->rules[i];
+    size_t i, j = 0;
+    if (s_sudoku_index_to_coords(sud, cell, &i, &j) == -1) {
+      s_cnf_free(cn);
+      return NULL;
+    }
+    int *litt = malloc(sizeof(int));
+    if (!litt) {
+      s_cnf_free(cn);
+      return NULL;
+    }
+    *litt = s_sudoku_sat_encode_litt(sud, i, j, v);
+    if (s_cnf_add_clause(cn, litt, 1) == -1) {
+      s_cnf_free(cn);
+      return NULL;
+    }
+  }
+
+  // Every cell must have a value
+  for (int i = 0; i < sud->n * sud->n; i++) {
+    int *litt = malloc(sizeof(int) * sud->n);
+    if (!litt) {
+      s_cnf_free(cn);
+      return NULL;
+    }
+    for (int j = 0; j < sud->n; j++) {
+      int cell = i;
+      size_t cell_i, cell_j = 0;
+      if (s_sudoku_index_to_coords(sud, cell, &cell_i, &cell_j) == -1) {
+        free(litt);
+        s_cnf_free(cn);
+        return NULL;
+      }
+      int v = j + 1;
+      litt[j] = s_sudoku_sat_encode_litt(sud, cell_i, cell_j, v);
+    }
+    if (s_cnf_add_clause(cn, litt, sud->n) == -1) {
+      free(litt);
+      s_cnf_free(cn);
+      return NULL;
+    }
+  }
+
+  // One cell cannot have two values
+  for (int i = 0; i < sud->n * sud->n; i++) {
+    for (int j = 0; j < sud->n; j++) {
+      for (int k = 0; k < sud->n; k++) {
+        if (j == k) continue;
+        int *litt = malloc(sizeof(int) * 2);
+        if (!litt) {
+          s_cnf_free(cn);
+          return NULL;
+        }
+        int cell = i;
+        size_t cell_i, cell_j = 0;
+        if (s_sudoku_index_to_coords(sud, cell, &cell_i, &cell_j) == -1) {
+          free(litt);
+          s_cnf_free(cn);
+          return NULL;
+        }
+        int v = j + 1;
+        int vp = k + 1;
+        litt[0] = -s_sudoku_sat_encode_litt(sud, cell_i, cell_j, v);
+        litt[1] = -s_sudoku_sat_encode_litt(sud, cell_i, cell_j, vp);
+        if (s_cnf_add_clause(cn, litt, 2) == -1) {
+          free(litt);
+          s_cnf_free(cn);
+          return NULL;
+        }
+      }
+
+    }
+  }
+
+  return cn;
 }
