@@ -217,7 +217,9 @@ void s_sudoku_print(s_sudoku sud) {
 // This function will return a unique number for this combination
 //    The goal is to represent the var x(ij, v) which represents
 //    the variable in a sat formula.
+//    Returns -1 if invalid parameters
 int s_sudoku_sat_encode_litt(s_sudoku sud, size_t i, size_t j, size_t v) {
+  if (v <= 0 || v > sud->n || i < 0 || i >= sud->n || j < 0 || j >= sud->n) return -1;
   int index = s_sudoku_coords_to_index(sud, i, j);
   return index * sud->n + v;
 }
@@ -269,9 +271,9 @@ int *s_sudoku_get_col(s_sudoku sud, int j) {
 // The blocks are noted this way
 //     n
 // <------->
-// 1 / 2 / 3
-// 4 / 5 / 6
-// 7 / 8 / 9
+// 0 / 1 / 2
+// 3 / 4 / 5
+// 6 / 7 / 8
 //
 int *s_sudoku_get_block(s_sudoku sud, int b) {
   if (!sud) return NULL;
@@ -280,10 +282,10 @@ int *s_sudoku_get_block(s_sudoku sud, int b) {
   if (!cells) return NULL;
 
   int sq = (int)sqrt(sud->n);
-  size_t first_cell_i = b;
+  size_t first_cell_i = b / sq * sq;
   size_t first_cell_j = b % sq * sq;
   int k = 0;
-  for (int i = first_cell_j; i < first_cell_i + sq; i++) {
+  for (int i = first_cell_i; i < first_cell_i + sq; i++) {
     for (int j = first_cell_j; j < first_cell_j + sq; j++) {
       cells[k++] = s_sudoku_coords_to_index(sud, i, j);
     }
@@ -485,26 +487,32 @@ int s_sudoku_cnf_set_uniq(s_sudoku sud, s_cnf cn, int *set, size_t len) {
 
 // Every line must contain every possible values
 int s_sudoku_cnf_line_complete(s_sudoku sud, s_cnf cn) {
+  return 0;
 }
 
 // One line cannot contain multiple times one value
 int s_sudoku_cnf_line_uniq(s_sudoku sud, s_cnf cn) {
+  return 0;
 }
 
 // Every col must contain every possible values
 int s_sudoku_cnf_col_complete(s_sudoku sud, s_cnf cn) {
+  return 0;
 }
 
 // One col cannot contain multiple times one value
 int s_sudoku_cnf_col_uniq(s_sudoku sud, s_cnf cn) {
+  return 0;
 }
 
 // Every cel must contain every possible values
 int s_sudoku_cnf_cel_complete(s_sudoku sud, s_cnf cn) {
+  return 0;
 }
 
 // One cel cannot contain multiple times one value
 int s_sudoku_cnf_cel_uniq(s_sudoku sud, s_cnf cn) {
+  return 0;
 }
 
 // ===================
