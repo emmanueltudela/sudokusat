@@ -4,6 +4,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <math.h>
 
 #include "sudoku.h"
 #include "cnf.h"
@@ -46,8 +47,8 @@ void s_sudoku_apply_rules(s_sudoku sud) {
 // Base functions
 
 s_sudoku s_sudoku_create(size_t n) {
-  // Must be divisible by 3
-  if (n % 3 != 0) return NULL;
+  // Must be a perfect square
+  if ((int)sqrt(n) * (int)sqrt(n) != n) return NULL;
 
   s_sudoku g = (s_sudoku)malloc(sizeof(struct sudoku));
   if (!g) return NULL;
@@ -179,7 +180,7 @@ void s_sudoku_print(s_sudoku sud) {
       if (ind == -1) return;
 
       // Vertical separation
-      if (j % 3 == 0 && j != 0) {
+      if (j % (int)sqrt(sud->n) == 0 && j != 0) {
         printf("┃");
       } else if (j != sud->n) {
         printf("┊");
@@ -196,7 +197,7 @@ void s_sudoku_print(s_sudoku sud) {
     printf("\n");
 
     for (int j = 0; j < sud->n; j++) {
-      if ((i + 1) % 3 == 0 && i != 0 && i != sud->n - 1)
+      if ((i + 1) % (int)sqrt(sud->n) == 0 && i != 0 && i != sud->n - 1)
         printf("━━━━");
       else if (i != sud->n - 1)
         printf("┈┈┈┈");
@@ -233,88 +234,303 @@ int s_sudoku_sat_decode_litt(s_sudoku sud, int litt, size_t *i, size_t *j, size_
   return 0;
 }
 
+// Returns the list of the cells index in line i
+// The number of cells in the result is sud->n
+int *s_sudoku_get_line(s_sudoku sud, int i) {
+  if (!sud) return NULL;
 
-// ===================
+  int *cells = malloc(sizeof(int) * sud->n);
+  if (!cells) return NULL;
 
-s_cnf s_sudoku_to_cnf(s_sudoku sud) {
-  s_cnf cn = s_cnf_create();
-  if (!cn) return NULL;
+  for (int j = 0; j < sud->n; j++) {
+    cells[j] = s_sudoku_coords_to_index(sud, i, j);
+  }
 
-  // Sud constraints are respected
-  for (int i = 0; i < sud->rules->len; i++) {
-    int cell = sud->rules->cells[i];
-    int v = sud->rules->rules[i];
-    size_t i, j = 0;
-    if (s_sudoku_index_to_coords(sud, cell, &i, &j) == -1) {
-      s_cnf_free(cn);
-      return NULL;
-    }
-    int *litt = malloc(sizeof(int));
-    if (!litt) {
-      s_cnf_free(cn);
-      return NULL;
-    }
-    *litt = s_sudoku_sat_encode_litt(sud, i, j, v);
-    if (s_cnf_add_clause(cn, litt, 1) == -1) {
-      s_cnf_free(cn);
-      return NULL;
+  return cells;
+}
+
+// Returns the list of the cells index in col j
+// The number of cells in the result is sud->n
+int *s_sudoku_get_col(s_sudoku sud, int j) {
+  if (!sud) return NULL;
+
+  int *cells = malloc(sizeof(int) * sud->n);
+  if (!cells) return NULL;
+
+  for (int i = 0; i < sud->n; i++) {
+    cells[i] = s_sudoku_coords_to_index(sud, i, j);
+  }
+
+  return cells;
+}
+
+// Returns the list of the cells index in block k
+// The number of cells in the result is sud->n
+// The blocks are noted this way
+//     n
+// <------->
+// 1 / 2 / 3
+// 4 / 5 / 6
+// 7 / 8 / 9
+//
+int *s_sudoku_get_block(s_sudoku sud, int b) {
+  if (!sud) return NULL;
+
+  int *cells = malloc(sizeof(int) * sud->n);
+  if (!cells) return NULL;
+
+  int sq = (int)sqrt(sud->n);
+  size_t first_cell_i = b;
+  size_t first_cell_j = b % sq * sq;
+  int k = 0;
+  for (int i = first_cell_j; i < first_cell_i + sq; i++) {
+    for (int j = first_cell_j; j < first_cell_j + sq; j++) {
+      cells[k++] = s_sudoku_coords_to_index(sud, i, j);
     }
   }
 
-  // Every cell must have a value
+  return cells;
+}
+
+// Every initial constraints must be respected
+int s_sudoku_cnf_constraints(s_sudoku sud, s_cnf cn) {
+  // For every constraint
+  for (int i = 0; i < sud->rules->len; i++) {
+    int cell = sud->rules->cells[i]; // Target cell of the constraint
+    int v = sud->rules->rules[i];    // Constraint value
+
+    // Get the coords of the target cell
+    size_t cell_i, cell_j = 0;
+    if (s_sudoku_index_to_coords(sud, cell, &cell_i, &cell_j) == -1) {
+      s_cnf_free(cn);
+      return -1;
+    }
+
+    // Create a new clause (that will contain one element here)
+    int *litt = malloc(sizeof(int));
+    if (!litt) {
+      s_cnf_free(cn);
+      return -1;
+    }
+    // The cell ij must have the value v
+    *litt = s_sudoku_sat_encode_litt(sud, cell_i, cell_j, v);
+    if (s_cnf_add_clause(cn, litt, 1) == -1) {
+      s_cnf_free(cn);
+      return -1;
+    }
+  }
+  return 0;
+}
+
+// Every cell must have at least one value
+int s_sudoku_cnf_values(s_sudoku sud, s_cnf cn) {
+  // For every cell
   for (int i = 0; i < sud->n * sud->n; i++) {
+    // Create a clause of size n
     int *litt = malloc(sizeof(int) * sud->n);
     if (!litt) {
       s_cnf_free(cn);
-      return NULL;
+      return -1;
     }
+
+    // For every values
     for (int j = 0; j < sud->n; j++) {
       int cell = i;
       size_t cell_i, cell_j = 0;
       if (s_sudoku_index_to_coords(sud, cell, &cell_i, &cell_j) == -1) {
         free(litt);
         s_cnf_free(cn);
-        return NULL;
+        return -1;
       }
+
+      // The cell ij must have at least one of the possible values
       int v = j + 1;
       litt[j] = s_sudoku_sat_encode_litt(sud, cell_i, cell_j, v);
     }
     if (s_cnf_add_clause(cn, litt, sud->n) == -1) {
       free(litt);
       s_cnf_free(cn);
-      return NULL;
+      return -1;
     }
   }
 
-  // One cell cannot have two values
+  return 0;
+}
+
+// One cell cannot have two values
+int s_sudoku_cnf_uniq(s_sudoku sud, s_cnf cn) {
+  // For every possible cell
   for (int i = 0; i < sud->n * sud->n; i++) {
+    // For every possible color
     for (int j = 0; j < sud->n; j++) {
+      // For every possible color different than the later
       for (int k = 0; k < sud->n; k++) {
         if (j == k) continue;
+
+        // Create a clause of size 2
         int *litt = malloc(sizeof(int) * 2);
         if (!litt) {
           s_cnf_free(cn);
-          return NULL;
+          return -1;
         }
+
+        // Get the coords of the current target cell
         int cell = i;
         size_t cell_i, cell_j = 0;
         if (s_sudoku_index_to_coords(sud, cell, &cell_i, &cell_j) == -1) {
           free(litt);
           s_cnf_free(cn);
-          return NULL;
+          return -1;
         }
+        // Get the two values
         int v = j + 1;
         int vp = k + 1;
+        // The cell must not one of the two values (not x1 or not x2)
+        // Same as : The cell cannot have the two values
+        // The minus means (not)
         litt[0] = -s_sudoku_sat_encode_litt(sud, cell_i, cell_j, v);
         litt[1] = -s_sudoku_sat_encode_litt(sud, cell_i, cell_j, vp);
         if (s_cnf_add_clause(cn, litt, 2) == -1) {
           free(litt);
           s_cnf_free(cn);
-          return NULL;
+          return -1;
         }
       }
 
     }
+  }
+  return 0;
+}
+
+// The set of cells set (of size len) must contain every possible values
+int s_sudoku_cnf_set_complete(s_sudoku sud, s_cnf cn, int *set, size_t len) {
+  // For every value
+  for (int i = 0; i < sud->n; i++) {
+    int v = i + 1;
+
+    // Create a new clause (contains one litt per cell in the set)
+    int *litt = malloc(sizeof(int) * len);
+    if (!litt) {
+      s_cnf_free(cn);
+      return -1;
+    }
+
+    // For every cell of the set
+    for (int j = 0; j < len; j++) {
+      int cell = set[j];
+      size_t cell_i, cell_j = 0;
+      if (s_sudoku_index_to_coords(sud, cell, &cell_i, &cell_j) == -1) {
+        return -1;
+      }
+      // The cell is of value v
+      litt[j] = s_sudoku_sat_encode_litt(sud, cell_i, cell_j, v);
+    }
+
+    // For a given value, one of the cell of the set must be of this value
+    if (s_cnf_add_clause(cn, litt, len) == -1) {
+      s_cnf_free(cn);
+      return -1;
+    }
+  }
+  return 0;
+}
+
+// The set of cells set (of size len) must not contain multiple times one value
+int s_sudoku_cnf_set_uniq(s_sudoku sud, s_cnf cn, int *set, size_t len) {
+  // For every cell of the set
+  for (int i = 0; i < len; i++) {
+
+    int cell1 = set[i];
+    size_t cell1_i, cell1_j = 0;
+    if (s_sudoku_index_to_coords(sud, cell1, &cell1_i, &cell1_j) == -1) {
+      return -1;
+    }
+
+    // For every cell of the set different than the later
+    for (int j = 0; j < len; j++) {
+      if (j == i) continue;
+
+      int cell2 = set[i];
+      size_t cell2_i, cell2_j = 0;
+      if (s_sudoku_index_to_coords(sud, cell2, &cell2_i, &cell2_j) == -1) {
+        return -1;
+      }
+
+      // For every color possible
+      for (int k = 0; k < sud->n; k++) {
+        int v = k + 1;
+
+        // Create a new clause (contains two litt)
+        int *litt = malloc(sizeof(int) * len);
+        if (!litt) {
+          s_cnf_free(cn);
+          return -1;
+        }
+
+        // Taken two by two, cell1 and cell2, we have cell1 is not of value v or cell2 is not of value v
+        litt[0] = -s_sudoku_sat_encode_litt(sud, cell1_i, cell1_j, v);
+        litt[1] = -s_sudoku_sat_encode_litt(sud, cell2_i, cell2_j, v);
+
+        // For a pair of cells in the set they cannot be both of value v
+        if (s_cnf_add_clause(cn, litt, 2) == -1) {
+          free(litt);
+          s_cnf_free(cn);
+          return -1;
+        }
+      }
+    }
+  }
+  return 0;
+}
+
+// Every line must contain every possible values
+int s_sudoku_cnf_line_complete(s_sudoku sud, s_cnf cn) {
+}
+
+// One line cannot contain multiple times one value
+int s_sudoku_cnf_line_uniq(s_sudoku sud, s_cnf cn) {
+}
+
+// Every col must contain every possible values
+int s_sudoku_cnf_col_complete(s_sudoku sud, s_cnf cn) {
+}
+
+// One col cannot contain multiple times one value
+int s_sudoku_cnf_col_uniq(s_sudoku sud, s_cnf cn) {
+}
+
+// Every cel must contain every possible values
+int s_sudoku_cnf_cel_complete(s_sudoku sud, s_cnf cn) {
+}
+
+// One cel cannot contain multiple times one value
+int s_sudoku_cnf_cel_uniq(s_sudoku sud, s_cnf cn) {
+}
+
+// ===================
+
+s_cnf s_sudoku_to_cnf(s_sudoku sud) {
+  if (!sud) return NULL;
+
+  s_cnf cn = s_cnf_create();
+  if (!cn) return NULL;
+
+  // (1)
+  if (s_sudoku_cnf_constraints(sud, cn) == -1) {
+   s_cnf_free(cn);
+   return NULL;
+  }
+
+  // (2)
+  if (s_sudoku_cnf_values(sud, cn) == -1) {
+   s_cnf_free(cn);
+   return NULL;
+  }
+
+  // (3)
+  if (s_sudoku_cnf_uniq(sud, cn) == -1) {
+   s_cnf_free(cn);
+   return NULL;
   }
 
   return cn;
