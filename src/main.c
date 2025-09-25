@@ -51,7 +51,18 @@ int main(int argc, char **argv) {
   // s_cnf_add_clause(cn, litt1, 3);
   // s_cnf_add_clause(cn, litt2, 3);
   s_cnf cn = s_sudoku_to_cnf(sud);
-  s_cnf_print(cn);
+  // s_cnf_print(cn);
+
+  printf("Number of clauses : %lu\n", cn->len);
+
+  int nlitt = 0;
+  for (int i = 0; i < cn->len; i++) {
+    nlitt += cn->clauses[i]->len;
+  }
+
+  printf("Total number of litt in formula : %d\n", nlitt);
+
+  printf("Total number of uniq litt : %lu\n", sud->n * sud->n * sud->n * 2);
 
   s_sudoku_free(sud);
   s_cnf_free(cn);

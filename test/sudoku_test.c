@@ -310,47 +310,11 @@ int s_sudoku_get_block_test() {
   return 0;
 }
 
-int s_sudoku_cnf_constraints_test() {
-  return 0;
-}
-
-int s_sudoku_cnf_values_test() {
-  return 0;
-}
-
-int s_sudoku_cnf_uniq_test() {
-  return 0;
-}
-
 int s_sudoku_cnf_set_complete_test() {
   return 0;
 }
 
 int s_sudoku_cnf_set_uniq_test() {
-  return 0;
-}
-
-int s_sudoku_cnf_line_complete_test() {
-  return 0;
-}
-
-int s_sudoku_cnf_line_uniq_test() {
-  return 0;
-}
-
-int s_sudoku_cnf_col_complete_test() {
-  return 0;
-}
-
-int s_sudoku_cnf_col_uniq_test() {
-  return 0;
-}
-
-int s_sudoku_cnf_cel_complete_test() {
-  return 0;
-}
-
-int s_sudoku_cnf_cel_uniq_test() {
   return 0;
 }
 
@@ -400,37 +364,10 @@ int main(int argc, char **argv) {
   if (strcmp(testname, "s_sudoku_get_block") == 0) {
     assert(s_sudoku_get_block_test() == 0);
   }
-  if (strcmp(testname, "s_sudoku_cnf_constraints") == 0) {
-    assert(s_sudoku_cnf_constraints_test() == 0);
-  }
-  if (strcmp(testname, "s_sudoku_cnf_values") == 0) {
-    assert(s_sudoku_cnf_values_test() == 0);
-  }
-  if (strcmp(testname, "s_sudoku_cnf_uniq") == 0) {
-    assert(s_sudoku_cnf_uniq_test() == 0);
-  }
   if (strcmp(testname, "s_sudoku_cnf_set_complete") == 0) {
     assert(s_sudoku_cnf_set_complete_test() == 0);
   }
   if (strcmp(testname, "s_sudoku_cnf_set_uniq") == 0) {
     assert(s_sudoku_cnf_set_uniq_test() == 0);
-  }
-  if (strcmp(testname, "s_sudoku_cnf_line_complete") == 0) {
-    assert(s_sudoku_cnf_line_complete_test() == 0);
-  }
-  if (strcmp(testname, "s_sudoku_cnf_line_uniq") == 0) {
-    assert(s_sudoku_cnf_line_uniq_test() == 0);
-  }
-  if (strcmp(testname, "s_sudoku_cnf_col_complete") == 0) {
-    assert(s_sudoku_cnf_col_complete_test() == 0);
-  }
-  if (strcmp(testname, "s_sudoku_cnf_col_uniq") == 0) {
-    assert(s_sudoku_cnf_col_uniq_test() == 0);
-  }
-  if (strcmp(testname, "s_sudoku_cnf_cel_complete") == 0) {
-    assert(s_sudoku_cnf_cel_complete_test() == 0);
-  }
-  if (strcmp(testname, "s_sudoku_cnf_cel_uniq") == 0) {
-    assert(s_sudoku_cnf_cel_uniq_test() == 0);
   }
 }

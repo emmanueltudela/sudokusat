@@ -320,6 +320,8 @@ int s_sudoku_cnf_constraints(s_sudoku sud, s_cnf cn) {
       s_cnf_free(cn);
       return -1;
     }
+
+    free(litt);
   }
   return 0;
 }
@@ -354,6 +356,8 @@ int s_sudoku_cnf_values(s_sudoku sud, s_cnf cn) {
       s_cnf_free(cn);
       return -1;
     }
+
+    free(litt);
   }
 
   return 0;
@@ -397,6 +401,8 @@ int s_sudoku_cnf_uniq(s_sudoku sud, s_cnf cn) {
           s_cnf_free(cn);
           return -1;
         }
+
+        free(litt);
       }
 
     }
@@ -410,7 +416,6 @@ int s_sudoku_cnf_set_complete(s_sudoku sud, s_cnf cn, int *set, size_t len) {
   for (int i = 0; i < sud->n; i++) {
     int v = i + 1;
 
-    // Create a new clause (contains one litt per cell in the set)
     int *litt = malloc(sizeof(int) * len);
     if (!litt) {
       s_cnf_free(cn);
@@ -433,6 +438,8 @@ int s_sudoku_cnf_set_complete(s_sudoku sud, s_cnf cn, int *set, size_t len) {
       s_cnf_free(cn);
       return -1;
     }
+
+    free(litt);
   }
   return 0;
 }
@@ -452,7 +459,7 @@ int s_sudoku_cnf_set_uniq(s_sudoku sud, s_cnf cn, int *set, size_t len) {
     for (int j = 0; j < len; j++) {
       if (j == i) continue;
 
-      int cell2 = set[i];
+      int cell2 = set[j];
       size_t cell2_i, cell2_j = 0;
       if (s_sudoku_index_to_coords(sud, cell2, &cell2_i, &cell2_j) == -1) {
         return -1;
@@ -479,6 +486,8 @@ int s_sudoku_cnf_set_uniq(s_sudoku sud, s_cnf cn, int *set, size_t len) {
           s_cnf_free(cn);
           return -1;
         }
+
+        free(litt);
       }
     }
   }
@@ -487,31 +496,115 @@ int s_sudoku_cnf_set_uniq(s_sudoku sud, s_cnf cn, int *set, size_t len) {
 
 // Every line must contain every possible values
 int s_sudoku_cnf_line_complete(s_sudoku sud, s_cnf cn) {
+  if (!sud || !cn) return -1;
+
+  for (int i = 0; i < sud->n; i++) {
+    int *line = s_sudoku_get_line(sud, i);
+    if (!line) return -1;
+
+    if (s_sudoku_cnf_set_complete(sud, cn, line, sud->n) == -1) {
+      free(line);
+      return -1;
+    }
+
+    free(line);
+  }
+
   return 0;
 }
 
 // One line cannot contain multiple times one value
 int s_sudoku_cnf_line_uniq(s_sudoku sud, s_cnf cn) {
+  if (!sud || !cn) return -1;
+
+  for (int i = 0; i < sud->n; i++) {
+    int *line = s_sudoku_get_line(sud, i);
+    if (!line) return -1;
+
+    if (s_sudoku_cnf_set_uniq(sud, cn, line, sud->n) == -1) {
+      free(line);
+      return -1;
+    }
+
+    free(line);
+  }
+
   return 0;
 }
 
 // Every col must contain every possible values
 int s_sudoku_cnf_col_complete(s_sudoku sud, s_cnf cn) {
+  if (!sud || !cn) return -1;
+
+  for (int i = 0; i < sud->n; i++) {
+    int *col = s_sudoku_get_col(sud, i);
+    if (!col) return -1;
+
+    if (s_sudoku_cnf_set_complete(sud, cn, col, sud->n) == -1)  {
+      free(col);
+      return -1;
+    }
+
+    free(col);
+  }
+
   return 0;
 }
 
 // One col cannot contain multiple times one value
 int s_sudoku_cnf_col_uniq(s_sudoku sud, s_cnf cn) {
+  if (!sud || !cn) return -1;
+
+  for (int i = 0; i < sud->n; i++) {
+    int *col = s_sudoku_get_col(sud, i);
+    if (!col) return -1;
+
+    if (s_sudoku_cnf_set_uniq(sud, cn, col, sud->n) == -1) {
+      free(col);
+      return -1;
+    }
+
+    free(col);
+  }
+
   return 0;
 }
 
 // Every cel must contain every possible values
-int s_sudoku_cnf_cel_complete(s_sudoku sud, s_cnf cn) {
+int s_sudoku_cnf_block_complete(s_sudoku sud, s_cnf cn) {
+  if (!sud || !cn) return -1;
+
+  for (int i = 0; i < sud->n; i++) {
+    int *block = s_sudoku_get_block(sud, i);
+    if (!block) return -1;
+
+    if (s_sudoku_cnf_set_complete(sud, cn, block, sud->n) == -1) {
+      free(block);
+      return -1;
+    }
+
+    free(block);
+  }
+
   return 0;
 }
 
 // One cel cannot contain multiple times one value
-int s_sudoku_cnf_cel_uniq(s_sudoku sud, s_cnf cn) {
+int s_sudoku_cnf_block_uniq(s_sudoku sud, s_cnf cn) {
+  if (!sud || !cn) return -1;
+
+  for (int i = 0; i < sud->n; i++) {
+    int *block = s_sudoku_get_block(sud, i);
+    if (!block) return -1;
+
+    if (s_sudoku_cnf_set_uniq(sud, cn, block, sud->n) == -1) {
+      free(block);
+      return -1;
+    };
+
+    free(block);
+  }
+
   return 0;
 }
 
@@ -537,6 +630,42 @@ s_cnf s_sudoku_to_cnf(s_sudoku sud) {
 
   // (3)
   if (s_sudoku_cnf_uniq(sud, cn) == -1) {
+   s_cnf_free(cn);
+   return NULL;
+  }
+
+  // (4) line
+  if (s_sudoku_cnf_line_complete(sud, cn) == -1) {
+   s_cnf_free(cn);
+   return NULL;
+  }
+
+  // (5) line
+  if (s_sudoku_cnf_line_uniq(sud, cn) == -1) {
+   s_cnf_free(cn);
+   return NULL;
+  }
+
+  // (4) col
+  if (s_sudoku_cnf_col_complete(sud, cn) == -1) {
+   s_cnf_free(cn);
+   return NULL;
+  }
+
+  // (5) col
+  if (s_sudoku_cnf_col_uniq(sud, cn) == -1) {
+   s_cnf_free(cn);
+   return NULL;
+  }
+
+  // (4) block
+  if (s_sudoku_cnf_block_complete(sud, cn) == -1) {
+   s_cnf_free(cn);
+   return NULL;
+  }
+
+  // (5) block
+  if (s_sudoku_cnf_block_uniq(sud, cn) == -1) {
    s_cnf_free(cn);
    return NULL;
   }
