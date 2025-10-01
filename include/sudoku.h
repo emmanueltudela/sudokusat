@@ -1,70 +1,118 @@
-#ifndef __SUDOKU_H__
-#define __SUDOKU_H__
+#ifndef SUDOKU_H
+#define SUDOKU_H
 
+#include <stdio.h>
 #include <stdlib.h>
 
-#include "cnf.h"
+// ===== STRUCTS =====
+
+// Private sudoku grid type
+typedef struct grid *s_grid;
+
+// ===================
 
 
-// Structs
+// ===== BASE FUNCTIONS =====
 
-// Represents the initial rules of
-// a grid
-typedef struct rules {
-  int *cells; // cells[i] corresponds to the cell target by the rule i
-  int *rules; // rules[i] corresponds to the digit to put in the cell for rule i
-  size_t len; // number of rules
-} *s_rules;
-
-// Represents sudoku grid in memory
-typedef struct sudoku {
-  int *arr;       // Grid of the sudoku game
-  s_rules rules;  // Set of rules to prefill the game
-  size_t n;       // Width of the grid, ultimate size is n*n (n must be divisible by 3)
-} *s_sudoku;
-
-
-// Base functions
-
-// Returns a sudoku struct of size nxn
-s_sudoku s_sudoku_create(size_t n);
-
-/* Reads and create a sudoku struct from a file
- * The first line must contain the size n of the grid where n is the width (and thus the height too)
- * The second line must contain the number of rules
- * The next lines describe the starting conditions of the grid following this scheme
- *      i -- this is the index of the target line
- *      j -- this is the index of the target column
- *      v -- this is the value to put in the cell (must be <= n)
- * each on a new line there must be no excess line break
+/* Creates a grid of sudoku, filled with 0,
+ * of size n*n and returns it.
+ *    - n must be a perfect square (!= 0 && != 1)
+ *
+ * Returns NULL on failure.
  */
-s_sudoku s_sudoku_read(char *filename);
+s_grid s_grid_create(size_t n);
 
-// Free a sudoku and it's rules (if defined)
-void s_sudoku_free(s_sudoku sud);
+void s_grid_free(s_grid g);
 
-// Replace current set of rules with a new set of n rules for sudoku grid sud (see s_rules for explanaition of cells and rules
-// Also modify the grid to show the rules used
-void s_sudoku_set_rules(s_sudoku sud, int *cells, int *rules, size_t n);
+// ==========================
 
 
-// Utility functions
+// ===== GETTERS =====
 
-// Returns the index in sudoku grid corresponding to line i and col j
-size_t s_sudoku_coords_to_index(s_sudoku sud, size_t i, size_t j);
+/* Returns size n of grid g
+ *    - g must be a non-null grid
+ *
+ * Returns 0 on failure
+ */
+size_t s_grid_size(s_grid g);
 
-// Puts the line i and col j in associated with sudoku grid index in the matching pointers
-// i and j must be valid pointers
-// The function will return 0 on success and -1 on failure
-int s_sudoku_index_to_coords(s_sudoku sud, size_t index, size_t *i, size_t *j);
+/* Returns the cell value at line i and col j
+ * in grid g
+ *    - 0 <= i < n (n the size of g)
+ *    - 0 <= j < n (n the size of g)
+ *
+ * A cell value of 0 means the cell is empty
+ *
+ * Returns -1 on failure
+ */
+int s_grid_get_cell_value(s_grid g, size_t i, size_t j);
 
-// Prints a pretty grid of sudoku
-void s_sudoku_print(s_sudoku sud);
+// ===================
 
 
-// SAT functions
+// ===== SETTERS =====
 
-// Returns a cnf formula describing constraints of grid
-s_cnf s_sudoku_to_cnf(s_sudoku sud);
+/* Set the cell at line i and col j the value val
+ *    - g must be a non-null grid
+ *    - 0 <= val <= n (n the size of g)
+ *      A cell value of 0 means an empty cell
+ *    - 0 <= i < n (n the size of g)
+ *    - 0 <= j < n (n the size of g)
+ *
+ * Returns 0 on success and -1 on failure
+ */
+int s_grid_set_cell_value(s_grid g, size_t i, size_t j, size_t val);
+
+// ===================
+
+
+// ===== UTILITY FUNCTIONS =====
+
+/* Returns a new grid created following the description
+ * given in the file (filename)
+ *    - filename must be non-null and represent a valid file
+ *    - A valid file represents a full grid of sudoku and
+ *      must follow these rules :
+ *        * Each new line of the file is a line of the grid
+ *        * Each line must have the same size
+ *        * The number of cells (n) on a line must be
+ *          a perfect square (4, 9, 25, ...)
+ *        * Each cell must be separated by a semicolon ';'
+ *            . No semicolon before the first cell nor after the last
+ *                - The number must be >= 0
+ *                  (if the number is 0 it means the cell is empty)
+ *                - The number must be <= n (n the size of g)
+ *
+ *      Example of a 4*4 grid :
+ *
+ *      0;0;1;2
+ *      0;1;1;1
+ *      1;3;1;4
+ *      0;0;0;0
+ *
+ *      Which represents the grid :
+ *      |   |   | 1 | 2 |
+ *      -----------------
+ *      |   | 1 | 1 | 1 |
+ *      -----------------
+ *      | 1 | 3 | 1 | 4 |
+ *      -----------------
+ *      |   |   |   |   |
+ *
+ * Returns NULL on failure
+ */
+s_grid s_grid_create_from_file(char *filename);
+
+/* Prints a pretty grid to file with the
+ * numbers and size of grid g
+ *    - file must be a valid file descriptor
+ *    - g must be a non-null grid
+ *
+ * Returns 0 on success -1 on failure
+ */
+int s_grid_print(int file, s_grid g);
+
+// =============================
+
 
 #endif
