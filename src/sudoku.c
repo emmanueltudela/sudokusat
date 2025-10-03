@@ -111,7 +111,11 @@ s_grid s_grid_create_from_file(char *filename) {
   return NULL;
 }
 
-int s_grid_print(int file, s_grid g) {
+int s_grid_print(FILE *file, s_grid g) {
+  if (!g || !file) return -1;
+
+  
+
   return 0;
 }
 

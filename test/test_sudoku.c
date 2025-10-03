@@ -102,8 +102,8 @@ void test_s_grid_print() {
   s_grid g = s_grid_create(4);
   assert(!g);
 
-  assert(s_grid_print(STDOUT_FILENO, g) == 0);
-  assert(s_grid_print(100, g) == -1);
+  assert(s_grid_print(stdout, g) == 0);
+  assert(s_grid_print(NULL, g) == -1);
 
   s_grid_free(g);
 }

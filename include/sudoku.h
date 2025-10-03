@@ -105,12 +105,12 @@ s_grid s_grid_create_from_file(char *filename);
 
 /* Prints a pretty grid to file with the
  * numbers and size of grid g
- *    - file must be a valid file descriptor
+ *    - file must be a valid file
  *    - g must be a non-null grid
  *
  * Returns 0 on success -1 on failure
  */
-int s_grid_print(int file, s_grid g);
+int s_grid_print(FILE *file, s_grid g);
 
 // =============================
 
