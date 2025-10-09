@@ -99,6 +99,10 @@ int s_grid_set_cell_value(s_grid g, size_t i, size_t j, size_t val);
  *      -----------------
  *      |   |   |   |   |
  *
+ * NOTE : If the grid description contains text or something
+ * other than numbers it will be replaced by an empty cell in the
+ * final grid.
+ *
  * Returns NULL on failure
  */
 s_grid s_grid_create_from_file(char *filename);

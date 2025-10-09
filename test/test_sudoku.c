@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
+#include <stdbool.h>
 
+#include <unistd.h>
 #include <string.h>
 #include <assert.h>
 
@@ -83,7 +84,7 @@ void test_s_grid_set_cell_value() {
 
 void test_s_grid_create_from_file() {
   s_grid g = s_grid_create_from_file("../data/test.txt");
-  assert(!g);
+  assert(g);
 
   assert(s_grid_size(g) == 4);
   assert(s_grid_get_cell_value(g, 2, 1) == 3);
@@ -100,7 +101,7 @@ void test_s_grid_create_from_file() {
 
 void test_s_grid_print() {
   s_grid g = s_grid_create(4);
-  assert(!g);
+  assert(g);
 
   assert(s_grid_print(stdout, g) == 0);
   assert(s_grid_print(NULL, g) == -1);
@@ -118,25 +119,27 @@ int main(int argc, char *argv[]) {
     exit(EXIT_FAILURE);
   }
 
-  if (strcmp(argv[1], "test_s_grid_create") == 0) {
+  bool execute_all = strcmp(argv[1], "all") == 0;
+
+  if (strcmp(argv[1], "test_s_grid_create") == 0 || execute_all) {
    test_s_grid_create();
   }
-  if (strcmp(argv[1], "test_s_grid_free") == 0) {
+  if (strcmp(argv[1], "test_s_grid_free") == 0 || execute_all) {
     test_s_grid_free();
   }
-  if (strcmp(argv[1], "test_s_grid_size") == 0) {
+  if (strcmp(argv[1], "test_s_grid_size") == 0 || execute_all) {
     test_s_grid_size();
   }
-  if (strcmp(argv[1], "test_s_grid_get_cell_value") == 0) {
+  if (strcmp(argv[1], "test_s_grid_get_cell_value") == 0 || execute_all) {
     test_s_grid_get_cell_value();
   }
-  if (strcmp(argv[1], "test_s_grid_set_cell_value") == 0) {
+  if (strcmp(argv[1], "test_s_grid_set_cell_value") == 0 || execute_all) {
     test_s_grid_set_cell_value();
   }
-  if (strcmp(argv[1], "test_s_grid_create_from_file") == 0) {
+  if (strcmp(argv[1], "test_s_grid_create_from_file") == 0 || execute_all) {
     test_s_grid_create_from_file();
   }
-  if (strcmp(argv[1], "test_s_grid_print") == 0) {
+  if (strcmp(argv[1], "test_s_grid_print") == 0 || execute_all) {
     test_s_grid_print();
   }
   return EXIT_SUCCESS;

@@ -1,4 +1,9 @@
+#define _POSIX_C_SOURCE 200809L
+
+#include <stdlib.h>
 #include <stdbool.h>
+
+#include <string.h>
 
 #include "sudoku.h"
 #include "math.h"
@@ -41,6 +46,49 @@ bool valid_grid_coords(s_grid g, size_t i, size_t j) {
  */
 size_t grid_coords_to_index(s_grid g, size_t i, size_t j) {
   return i * g->n + j;
+}
+
+/* Returns the size n of the grid from the given file
+ * that must contain a grid description
+ *    - filename must be non-null and represent a valid file
+ *
+ * Returns -1 on error
+ */
+int get_grid_size_from_file(char *filename) {
+  if (!filename) return -1;
+
+  FILE *file = fopen(filename, "r");
+  if (!file) return -1;
+
+  char *buffer = NULL;
+  size_t buffer_size = 0;
+  int r = 0;
+
+  // Read the first line of the file
+  r = getline(&buffer, &buffer_size, file);
+  if (r == 0 || buffer_size <= 0) {
+    fclose(file);
+    free(buffer);
+    return -1;
+  }
+
+  // Initialize strtok
+  int size = 0;
+  char *token = strtok(buffer, ";");
+  if (!token) {
+    fclose(file);
+    free(buffer);
+    return -1;
+  };
+
+  // For every token increase the size of the grid
+  do {
+    size++;
+  } while ((token = strtok(NULL, ";")));
+
+  fclose(file);
+  free(buffer);
+  return size;
 }
 
 // ===================
@@ -108,13 +156,140 @@ int s_grid_set_cell_value(s_grid g, size_t i, size_t j, size_t val) {
 // ===== UTILITY FUNCTIONS =====
 
 s_grid s_grid_create_from_file(char *filename) {
-  return NULL;
+  if (!filename) return NULL;
+
+  // Open file
+  FILE *file = fopen(filename, "r");
+  if (!file) return NULL;
+
+  // Init grid
+  int n = get_grid_size_from_file(filename);
+  if (n == -1) {
+    fclose(file);
+    return NULL;
+  }
+
+  s_grid g = s_grid_create(n);
+
+  char *buffer = NULL;
+  size_t buffer_size = 0;
+  int r = 0;
+
+  // Those are user to keep count
+  // of the cells position in the grid description
+  size_t i = 0; // Current grid line
+  size_t j = 0; // Current gird col
+
+  // For each line of the file
+  while ((r = getline(&buffer, &buffer_size, file)) > 0) {
+    char *token = strtok(buffer, ";");
+    if (!token) continue;
+
+    int line_size = 0;
+
+    // For every token in the line
+    do {
+      // Get cell value
+      int val = atol(token);
+      if (val < 0 || val > n) {
+        fclose(file);
+        s_grid_free(g);
+        free(buffer);
+        return NULL;
+      }
+
+      line_size++;
+
+      // If there is more cols than the size of the grid
+      // there is an error
+      if (line_size > n) {
+        fclose(file);
+        s_grid_free(g);
+        s_grid_free(g);
+        free(buffer);
+        return NULL;
+      }
+
+      // Update grid
+      int index = grid_coords_to_index(g, i, j);
+      g->grid[index] = val;
+
+      j++; // Next col
+    } while ((token = strtok(NULL, ";")));
+
+    j = 0; // Reset col
+    i++;   // Next line
+
+    // If there is too much line in the file
+    // Or not enough columns in the line
+    // Error
+    if (i > n || line_size != n) {
+      fclose(file);
+      s_grid_free(g);
+      free(buffer);
+      return NULL;
+    }
+  }
+
+  // If there is not enough lines in the file
+  // Error
+  if (i != n) {
+    fclose(file);
+    s_grid_free(g);
+    free(buffer);
+    return NULL;
+  }
+
+  fclose(file);
+  free(buffer);
+  return g;
 }
 
 int s_grid_print(FILE *file, s_grid g) {
   if (!g || !file) return -1;
 
-  
+  for (int i = 0; i < g->n; i++) {
+    for (int j = 0; j < g->n; j++) {
+      int index = grid_coords_to_index(g, i, j);
+      int val = g->grid[index];
+
+      if (val != 0) {
+        if (fprintf(file, " %d ", val) < 0) return -1;
+      } else {
+        if (fprintf(file, "   ") < 0) return -1;
+      }
+
+      // Show hard separation every sqrt(n) cells
+      // On a n=9 grid it is every 3 cells
+      bool verticalSeparation = (j + 1) % (int)sqrt(g->n) == 0;
+      bool isLastCol = j == g->n - 1;
+
+      if (verticalSeparation && !isLastCol) {
+        if (fprintf(file, "┃") < 0) return -1;
+      } else if (!isLastCol) {
+        if (fprintf(file, "┊") < 0) return -1;
+      }
+    }
+
+    if (fprintf(file, "\n") < 0) return -1;
+
+    // Show hard separation every sqrt(n) cells
+    // On a n=9 grid it is every 3 cells
+    bool horizontalSeparation = (i + 1) % (int)sqrt(g->n) == 0;
+    bool isLastLine = i == g->n - 1;
+
+    for (int k = 0; k < g->n; k++) {
+      if (horizontalSeparation && !isLastLine) {
+        if (fprintf(file, "━━━━") < 0) return -1;
+      } else if (!isLastLine) {
+        if (fprintf(file, "┈┈┈┈") < 0) return -1;
+      }
+    }
+
+    if (!isLastLine)
+      if (fprintf(file, "\n") < 0) return -1;
+
+  }
 
   return 0;
 }
