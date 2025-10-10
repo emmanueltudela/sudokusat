@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+
 // ===== STRUCTS =====
 
 // Private sudoku grid type

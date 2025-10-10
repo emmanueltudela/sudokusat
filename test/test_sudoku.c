@@ -110,7 +110,8 @@ void test_s_grid_print() {
 }
 
 void usage(char *exec) {
-  printf("%s testname\n", exec);
+  printf("%s testname     -> Execute the given testname\n", exec);
+  printf("%s all    -> Execute every tests\n", exec);
 }
 
 int main(int argc, char *argv[]) {
