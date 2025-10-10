@@ -23,6 +23,8 @@ void s_cnf_free(s_cnf cn);
 
 /* Returns a full copy of the cnf formula cn
  *    - cn must be a valid non-null cnf formula
+ *
+ * Returns NULL on error
  */
 s_cnf s_cnf_copy(s_cnf cn);
 
@@ -56,6 +58,9 @@ int s_cnf_remove_clause(s_cnf cn, size_t c_id);
  *    - cn must be a valid non-null cnf formula
  *    - c_id must be the id of a clause in the formula
  *    - litt must be a valid litteral (!= 0)
+ *
+ * Will not add mutliple time the same litt to the same clause
+ *    and will not fail when asked to do so
  *
  * Returns 0 on success and 1 on failure
  */
@@ -108,12 +113,14 @@ int s_cnf_clause_contains_litt(s_cnf cn, size_t c_id, int litt);
  *
  * Modifying the returned array doesn't modify the cnf formula.
  *
- * The insertion order is maintained.
- *
  * The returned array must be freed by the user
- * This function returns NULL on failure
+ *
+ * This function returns NULL on empty lists
+ * If invalid arguments are passed to this function
+ * it will return the same output as for an empty
+ * list
  */
-size_t *s_cnf_get_clauses(s_cnf cn, size_t *n);
+size_t *s_cnf_get_clauses_ids(s_cnf cn, size_t *n);
 
 /* Returns a pointer to an array of the litterals in clause c_id
  * Stores the size of this array in n
@@ -123,10 +130,12 @@ size_t *s_cnf_get_clauses(s_cnf cn, size_t *n);
  *
  * Modifying the returned array does't modify the cnf formula.
  *
- * The insertion order is maintained
- *
  * The returned array must be freed by the user
- * This function returns NULL on failure
+ *
+ * This function returns NULL on empty lists
+ * If invalid arguments are passed to this function
+ * it will return the same output as for an empty
+ * list
  */
 int *s_cnf_clause_get_litts(s_cnf cn, size_t c_id, size_t *n);
 

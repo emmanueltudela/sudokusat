@@ -48,6 +48,6 @@ add_test(NAME test_s_cnf_clause_remove_litt COMMAND test_cnf test_s_cnf_clause_r
 add_test(NAME test_s_cnf_clause_empty COMMAND test_cnf test_s_cnf_clause_empty)
 add_test(NAME test_s_cnf_clause_unit COMMAND test_cnf test_s_cnf_clause_unit)
 add_test(NAME test_s_cnf_clause_contains_litt COMMAND test_cnf test_s_cnf_clause_contains_litt)
-add_test(NAME test_s_cnf_get_clauses COMMAND test_cnf test_s_cnf_get_clauses)
+add_test(NAME test_s_cnf_get_clauses_ids COMMAND test_cnf test_s_cnf_get_clauses_ids)
 add_test(NAME test_s_cnf_clause_get_litts COMMAND test_cnf test_s_cnf_clause_get_litts)
 add_test(NAME test_s_cnf_print COMMAND test_cnf test_s_cnf_print)

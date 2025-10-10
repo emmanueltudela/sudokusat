@@ -19,7 +19,6 @@ void test_s_cnf_free() {
   assert(cn);
 
   s_cnf_free(cn);
-  assert(!cn);
 }
 
 void test_s_cnf_copy() {
@@ -60,7 +59,7 @@ void test_s_cnf_add_clause() {
   assert(!s_cnf_clause_contains_litt(cn, c_id1, 4)); // clause1 does not contain x4
   assert(s_cnf_clause_empty(cn, c_id2));             // clause2 is empty
 
-  assert(s_cnf_add_clause(NULL, NULL, 0) != -1);     // Can add empty clause
+  assert(s_cnf_add_clause(cn, NULL, 0) != -1);       // Can add empty clause
   assert(s_cnf_add_clause(NULL, NULL, 1) == -1);     // Invalid empty array of size 1
 
   int litt2[] = {0, -1};
@@ -80,7 +79,7 @@ void test_s_cnf_remove_clause() {
   assert(s_cnf_remove_clause(cn, c_id) == 0); // Valid remove
 
   size_t nb_clauses = 0;
-  size_t *clauses = s_cnf_get_clauses(cn, &nb_clauses);
+  size_t *clauses = s_cnf_get_clauses_ids(cn, &nb_clauses);
   assert(nb_clauses == 0);
 
   assert(s_cnf_remove_clause(cn, c_id + 1) == 1); // Invalid call
@@ -179,7 +178,7 @@ void test_s_cnf_clause_unit() {
   s_cnf_free(cn);
 }
 
-void test_s_cnf_get_clauses() {
+void test_s_cnf_get_clauses_ids() {
   s_cnf cn = s_cnf_create();
   assert(cn);
 
@@ -189,7 +188,7 @@ void test_s_cnf_get_clauses() {
   size_t c_id2 = s_cnf_add_clause(cn, litt2, 1);
 
   size_t clauses_length = 0;
-  size_t *clauses = s_cnf_get_clauses(cn, &clauses_length);
+  size_t *clauses = s_cnf_get_clauses_ids(cn, &clauses_length);
   assert(clauses);                          // Valid call
   assert(clauses_length == 2);
 
@@ -198,7 +197,7 @@ void test_s_cnf_get_clauses() {
   assert(s_cnf_clause_contains_litt(cn, c_id1, 2) == 1);
   assert(s_cnf_clause_contains_litt(cn, c_id2, 2) == 0);
 
-  assert(!s_cnf_get_clauses(cn, NULL));     // Invalid call
+  assert(!s_cnf_get_clauses_ids(cn, NULL));     // Empty list
 
   free(clauses);
   s_cnf_free(cn);
@@ -216,13 +215,16 @@ void test_s_cnf_clause_get_litts() {
   assert(litts);                          // Valid call
   assert(litts_length == 2);
 
-  // Check integrity
-  for (int i = 0; i < litts_length; i++) {
-    assert(litts[i] == litt[i]);
-  }
+  // Check if the litts are the same
+  s_cnf cn2 = s_cnf_create();
+  size_t c_id2 = s_cnf_add_clause(cn2, litts, litts_length);
+  assert(s_cnf_clause_contains_litt(cn2, c_id2, 1));
+  assert(s_cnf_clause_contains_litt(cn2, c_id2, 2));
 
-  assert(!s_cnf_clause_get_litts(cn, c_id + 1, &litts_length));     // Invalid call
-  assert(!s_cnf_clause_get_litts(cn, c_id, NULL));                  // Invalid call
+  s_cnf_free(cn2);
+
+  assert(!s_cnf_clause_get_litts(cn, c_id + 1, &litts_length));     // Empty list
+  assert(!s_cnf_clause_get_litts(cn, c_id, NULL));                  // Empty list
 
   free(litts);
   s_cnf_free(cn);
@@ -235,7 +237,7 @@ void test_s_cnf_print() {
   s_cnf_print(cn);
 
   int litt[] = {1, 2};
-  size_t c_id = s_cnf_add_clause(cn, litt, 2);
+  s_cnf_add_clause(cn, litt, 2);
 
   s_cnf_print(cn);
 
@@ -288,8 +290,8 @@ int main(int argc, char *argv[]) {
   if (strcmp(argv[1], "test_s_cnf_clause_contains_litt") == 0 || execute_all) {
     test_s_cnf_clause_contains_litt();
   }
-  if (strcmp(argv[1], "test_s_cnf_get_clauses") == 0 || execute_all) {
-    test_s_cnf_get_clauses();
+  if (strcmp(argv[1], "test_s_cnf_get_clauses_ids") == 0 || execute_all) {
+    test_s_cnf_get_clauses_ids();
   }
   if (strcmp(argv[1], "test_s_cnf_clause_get_litts") == 0 || execute_all) {
     test_s_cnf_clause_get_litts();
