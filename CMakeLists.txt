@@ -40,6 +40,7 @@ target_include_directories(test_cnf PUBLIC include)
 
 add_test(NAME test_s_cnf_create COMMAND test_cnf test_s_cnf_create)
 add_test(NAME test_s_cnf_free COMMAND test_cnf test_s_cnf_free)
+add_test(NAME test_s_cnf_copy COMMAND test_cnf test_s_cnf_copy)
 add_test(NAME test_s_cnf_add_clause COMMAND test_cnf test_s_cnf_add_clause)
 add_test(NAME test_s_cnf_remove_clause COMMAND test_cnf test_s_cnf_remove_clause)
 add_test(NAME test_s_cnf_clause_add_litt COMMAND test_cnf test_s_cnf_clause_add_litt)
