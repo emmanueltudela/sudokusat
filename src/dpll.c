@@ -177,13 +177,11 @@ bool dpll_internal(s_cnf cn) {
   // Unit propagation
   int unit_litt = 0;
   while ((unit_litt = get_unit_clause_litt(cn)) != 0) {
-    printf("Propagate\n");
     unit_propagate(cn, unit_litt);
   }
   // Pure literal elimination
   int pure_litt = 0;
   while ((pure_litt = get_pure_litteral(cn))) {
-    printf("Eliminate\n");
     pure_litteral_assign(cn, pure_litt);
   }
   // Stopping conditions
