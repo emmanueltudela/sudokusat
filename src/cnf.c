@@ -45,6 +45,7 @@ void free_litterals_slist(struct litterals_head *litterals) {
     SLIST_REMOVE_HEAD(litterals, litterals);        // Remove head from slist
     free(lit);                                      // Free it
   }
+  free(litterals);                                  // Free the slist
 }
 
 /* Frees the whole slist of clauses and its
@@ -57,6 +58,7 @@ void free_clauses_slist(struct clauses_head *clauses) {
     free_litterals_slist(cl->litterals);            // Free litterals slist
     free(cl);                                       // Free the clause struct
   }
+  free(clauses);                                    // Free the main slist
 }
 
 /* Returns a pointer to the given clause by its id
@@ -113,7 +115,7 @@ s_cnf s_cnf_create() {
 }
 
 void s_cnf_free(s_cnf cn) {
-  free_clauses_slist(cn->clauses); // Also frees the litterals
+  free_clauses_slist(cn->clauses); // Free every clauses and every litterals
   free(cn);
 }
 
@@ -122,14 +124,6 @@ s_cnf s_cnf_copy(s_cnf cn) {
 
   s_cnf new_cn = s_cnf_create();
   if (!new_cn) return NULL;
-
-  // Create the clauses list
-  new_cn->clauses = malloc(sizeof(struct litterals_head));
-  if (!new_cn->clauses) {
-    free(new_cn);
-    return NULL;
-  }
-  SLIST_INIT(new_cn->clauses);
 
   // Create a copy of each clause and append it to
   // the new list of clauses
