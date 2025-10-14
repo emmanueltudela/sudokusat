@@ -1,4 +1,5 @@
 #ifndef CNF_H
+#define CNF_H
 
 #include <stdlib.h>
 #include <stdbool.h>

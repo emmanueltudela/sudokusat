@@ -11,10 +11,10 @@
 
 // ===== STRUCTS =====
 
-typedef struct grid {
+typedef struct sudoku {
   size_t *grid;
   size_t n;
-} *s_grid;
+} *s_sudoku;
 
 // ===================
 
@@ -32,7 +32,7 @@ bool is_perfect_square(int n) {
  * given grid range or not
  *    - g must be a non-null grid
  */
-bool valid_grid_coords(s_grid g, size_t i, size_t j) {
+bool valid_grid_coords(s_sudoku g, size_t i, size_t j) {
   bool valid_line = i >= 0 && i < g->n;
   bool valid_col = j >= 0 && j < g->n;
   return valid_line && valid_col;
@@ -44,7 +44,7 @@ bool valid_grid_coords(s_grid g, size_t i, size_t j) {
  *    - 0 <= i < n (n the size of g)
  *    - 0 <= j < n (n the size of g)
  */
-size_t grid_coords_to_index(s_grid g, size_t i, size_t j) {
+size_t grid_coords_to_index(s_sudoku g, size_t i, size_t j) {
   return i * g->n + j;
 }
 
@@ -96,10 +96,10 @@ int get_grid_size_from_file(char *filename) {
 
 // ===== BASE FUNCTIONS =====
 
-s_grid s_grid_create(size_t n) {
+s_sudoku s_sudoku_create(size_t n) {
   if (!is_perfect_square(n) || n == 0 || n == 1) return NULL;
 
-  s_grid g = (s_grid)malloc(sizeof(struct grid));
+  s_sudoku g = (s_sudoku)malloc(sizeof(struct sudoku));
   if (!g) return NULL;
 
   size_t *grid = (size_t *)calloc(n * n, sizeof(size_t));
@@ -113,7 +113,7 @@ s_grid s_grid_create(size_t n) {
   return g;
 }
 
-void s_grid_free(s_grid g) {
+void s_sudoku_free(s_sudoku g) {
   free(g->grid);
   free(g);
 }
@@ -123,12 +123,12 @@ void s_grid_free(s_grid g) {
 
 // ===== GETTERS =====
 
-size_t s_grid_size(s_grid g) {
+size_t s_sudoku_size(s_sudoku g) {
   if (!g) return 0;
   return g->n;
 }
 
-int s_grid_get_cell_value(s_grid g, size_t i, size_t j) {
+int s_sudoku_get_cell_value(s_sudoku g, size_t i, size_t j) {
   if (!g || !valid_grid_coords(g, i, j)) return -1;
 
   int index = grid_coords_to_index(g, i, j);
@@ -140,7 +140,7 @@ int s_grid_get_cell_value(s_grid g, size_t i, size_t j) {
 
 // ===== SETTERS =====
 
-int s_grid_set_cell_value(s_grid g, size_t i, size_t j, size_t val) {
+int s_sudoku_set_cell_value(s_sudoku g, size_t i, size_t j, size_t val) {
   if (!g || !valid_grid_coords(g, i, j)) return -1;
   bool valid_val = val >= 0 && val <= g->n;
   if (!valid_val) return -1;
@@ -155,7 +155,7 @@ int s_grid_set_cell_value(s_grid g, size_t i, size_t j, size_t val) {
 
 // ===== UTILITY FUNCTIONS =====
 
-s_grid s_grid_create_from_file(char *filename) {
+s_sudoku s_sudoku_create_from_file(char *filename) {
   if (!filename) return NULL;
 
   // Open file
@@ -169,7 +169,7 @@ s_grid s_grid_create_from_file(char *filename) {
     return NULL;
   }
 
-  s_grid g = s_grid_create(n);
+  s_sudoku g = s_sudoku_create(n);
 
   char *buffer = NULL;
   size_t buffer_size = 0;
@@ -193,7 +193,7 @@ s_grid s_grid_create_from_file(char *filename) {
       int val = atol(token);
       if (val < 0 || val > n) {
         fclose(file);
-        s_grid_free(g);
+        s_sudoku_free(g);
         free(buffer);
         return NULL;
       }
@@ -204,8 +204,8 @@ s_grid s_grid_create_from_file(char *filename) {
       // there is an error
       if (line_size > n) {
         fclose(file);
-        s_grid_free(g);
-        s_grid_free(g);
+        s_sudoku_free(g);
+        s_sudoku_free(g);
         free(buffer);
         return NULL;
       }
@@ -225,7 +225,7 @@ s_grid s_grid_create_from_file(char *filename) {
     // Error
     if (i > n || line_size != n) {
       fclose(file);
-      s_grid_free(g);
+      s_sudoku_free(g);
       free(buffer);
       return NULL;
     }
@@ -235,7 +235,7 @@ s_grid s_grid_create_from_file(char *filename) {
   // Error
   if (i != n) {
     fclose(file);
-    s_grid_free(g);
+    s_sudoku_free(g);
     free(buffer);
     return NULL;
   }
@@ -245,7 +245,7 @@ s_grid s_grid_create_from_file(char *filename) {
   return g;
 }
 
-int s_grid_print(FILE *file, s_grid g) {
+int s_sudoku_print(FILE *file, s_sudoku g) {
   if (!g || !file) return -1;
 
   for (int i = 0; i < g->n; i++) {

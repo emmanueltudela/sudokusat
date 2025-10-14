@@ -23,13 +23,13 @@ target_link_libraries(test_sudoku PUBLIC m)
 target_compile_options(test_sudoku PUBLIC -std=c99 -Wall -g)
 target_include_directories(test_sudoku PUBLIC include)
 
-add_test(NAME test_s_grid_create COMMAND test_sudoku test_s_grid_create)
-add_test(NAME test_s_grid_free COMMAND test_sudoku test_s_grid_free)
-add_test(NAME test_s_grid_size COMMAND test_sudoku test_s_grid_size)
-add_test(NAME test_s_grid_get_cell_value COMMAND test_sudoku test_s_grid_get_cell_value)
-add_test(NAME test_s_grid_set_cell_value COMMAND test_sudoku test_s_grid_set_cell_value)
-add_test(NAME test_s_grid_create_from_file COMMAND test_sudoku test_s_grid_create_from_file)
-add_test(NAME test_s_grid_print COMMAND test_sudoku test_s_grid_print)
+add_test(NAME test_s_sudoku_create COMMAND test_sudoku test_s_sudoku_create)
+add_test(NAME test_s_sudoku_free COMMAND test_sudoku test_s_sudoku_free)
+add_test(NAME test_s_sudoku_size COMMAND test_sudoku test_s_sudoku_size)
+add_test(NAME test_s_sudoku_get_cell_value COMMAND test_sudoku test_s_sudoku_get_cell_value)
+add_test(NAME test_s_sudoku_set_cell_value COMMAND test_sudoku test_s_sudoku_set_cell_value)
+add_test(NAME test_s_sudoku_create_from_file COMMAND test_sudoku test_s_sudoku_create_from_file)
+add_test(NAME test_s_sudoku_print COMMAND test_sudoku test_s_sudoku_print)
 
 # Test cnf
 

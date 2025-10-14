@@ -5,10 +5,21 @@
 #include <stdlib.h>
 
 
+// ===== USEFULL DEFINES =====
+
+/* This value can't be changed because this define is not used in the source
+ * file. It is only to make the code using this file clearer. Maybe I will
+ * implement this behavior in the future. (probably not)
+ */
+#define GRID_EMPTY_CELL 0
+
+// ===========================
+
+
 // ===== STRUCTS =====
 
 // Private sudoku grid type
-typedef struct grid *s_grid;
+typedef struct sudoku *s_sudoku;
 
 // ===================
 
@@ -21,9 +32,9 @@ typedef struct grid *s_grid;
  *
  * Returns NULL on failure.
  */
-s_grid s_grid_create(size_t n);
+s_sudoku s_sudoku_create(size_t n);
 
-void s_grid_free(s_grid g);
+void s_sudoku_free(s_sudoku g);
 
 // ==========================
 
@@ -35,7 +46,7 @@ void s_grid_free(s_grid g);
  *
  * Returns 0 on failure
  */
-size_t s_grid_size(s_grid g);
+size_t s_sudoku_size(s_sudoku g);
 
 /* Returns the cell value at line i and col j
  * in grid g
@@ -46,7 +57,7 @@ size_t s_grid_size(s_grid g);
  *
  * Returns -1 on failure
  */
-int s_grid_get_cell_value(s_grid g, size_t i, size_t j);
+int s_sudoku_get_cell_value(s_sudoku g, size_t i, size_t j);
 
 // ===================
 
@@ -62,7 +73,7 @@ int s_grid_get_cell_value(s_grid g, size_t i, size_t j);
  *
  * Returns 0 on success and -1 on failure
  */
-int s_grid_set_cell_value(s_grid g, size_t i, size_t j, size_t val);
+int s_sudoku_set_cell_value(s_sudoku g, size_t i, size_t j, size_t val);
 
 // ===================
 
@@ -106,7 +117,7 @@ int s_grid_set_cell_value(s_grid g, size_t i, size_t j, size_t val);
  *
  * Returns NULL on failure
  */
-s_grid s_grid_create_from_file(char *filename);
+s_sudoku s_sudoku_create_from_file(char *filename);
 
 /* Prints a pretty grid to file with the
  * numbers and size of grid g
@@ -115,7 +126,7 @@ s_grid s_grid_create_from_file(char *filename);
  *
  * Returns 0 on success -1 on failure
  */
-int s_grid_print(FILE *file, s_grid g);
+int s_sudoku_print(FILE *file, s_sudoku g);
 
 // =============================
 
