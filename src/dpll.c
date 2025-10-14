@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdbool.h>
 
 #include "cnf.h"
@@ -176,11 +177,13 @@ bool dpll_internal(s_cnf cn) {
   // Unit propagation
   int unit_litt = 0;
   while ((unit_litt = get_unit_clause_litt(cn)) != 0) {
+    printf("Propagate\n");
     unit_propagate(cn, unit_litt);
   }
   // Pure literal elimination
   int pure_litt = 0;
   while ((pure_litt = get_pure_litteral(cn))) {
+    printf("Eliminate\n");
     pure_litteral_assign(cn, pure_litt);
   }
   // Stopping conditions
@@ -191,6 +194,7 @@ bool dpll_internal(s_cnf cn) {
     return false;
   }
   // DPLL procedure
+  printf("Guess\n");
   int litt = cnf_choose_litteral(cn);
   s_cnf cn_2 = s_cnf_copy(cn);
 
