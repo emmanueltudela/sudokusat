@@ -84,7 +84,7 @@ int s_cnf_clause_remove_litt(s_cnf cn, size_t c_id, int litt);
  */
 int s_cnf_clause_empty(s_cnf cn, size_t c_id);
 
-/* Returns whether the given clause c_id is empty
+/* Returns whether the given clause c_id is a unit clause
  * (aka contains exactly one litt)
  *    - cn must be a valid non-null cnf formula
  *    - c_id must be the id of a clause in the formula

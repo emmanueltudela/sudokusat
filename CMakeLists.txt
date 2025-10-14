@@ -51,3 +51,18 @@ add_test(NAME test_s_cnf_clause_contains_litt COMMAND test_cnf test_s_cnf_clause
 add_test(NAME test_s_cnf_get_clauses_ids COMMAND test_cnf test_s_cnf_get_clauses_ids)
 add_test(NAME test_s_cnf_clause_get_litts COMMAND test_cnf test_s_cnf_clause_get_litts)
 add_test(NAME test_s_cnf_print COMMAND test_cnf test_s_cnf_print)
+
+# Test DPLL
+
+add_executable(test_dpll test/test_dpll.c src/cnf.c)
+
+target_compile_options(test_dpll PUBLIC -std=c99 -Wall -g)
+target_include_directories(test_dpll PUBLIC include)
+
+add_test(NAME test_get_unit_clause_litt COMMAND test_dpll test_get_unit_clause_litt)
+add_test(NAME test_get_pure_litteral COMMAND test_dpll test_get_pure_litteral)
+add_test(NAME test_cnf_is_empty COMMAND test_dpll test_cnf_is_empty)
+add_test(NAME test_cnf_contains_empty_clause COMMAND test_dpll test_cnf_contains_empty_clause)
+add_test(NAME test_cnf_choose_litteral COMMAND test_dpll test_cnf_choose_litteral)
+add_test(NAME test_unit_propagate COMMAND test_dpll test_unit_propagate)
+add_test(NAME test_pure_litteral_assign COMMAND test_dpll test_pure_litteral_assign)
