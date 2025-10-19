@@ -406,7 +406,8 @@ s_cnf sudoku_to_cnf(s_sudoku g) {
   add_cnf_cells_have_values(cn, g);
 
   // At most
-  add_cnf_cells_have_one_value(cn, g);
+  // REDUNDANT
+  // add_cnf_cells_have_one_value(cn, g);
 
   // We want each line of the grid to contain every possible values exactly one
   // time (rules of sudoku).
@@ -416,8 +417,9 @@ s_cnf sudoku_to_cnf(s_sudoku g) {
     // Get every cells of the current line
     coords *line = get_sudoku_line(g, l);
 
+    // REDUNDANT
     // Ensure it contains every values at least once
-    add_cnf_sudoku_set_complete(cn, g, line, n);
+    // add_cnf_sudoku_set_complete(cn, g, line, n);
 
     // Ensure it contains every values at most once
     add_cnf_sudoku_set_uniq(cn, g, line, n);
@@ -432,8 +434,9 @@ s_cnf sudoku_to_cnf(s_sudoku g) {
     // Get every cells of the current col
     coords *col = get_sudoku_col(g, c);
 
+    // REDUNDANT CLAUSES
     // Ensure it contains every values at least once
-    add_cnf_sudoku_set_complete(cn, g, col, n);
+    // add_cnf_sudoku_set_complete(cn, g, col, n);
 
     // Ensure it contains every values at most once
     add_cnf_sudoku_set_uniq(cn, g, col, n);
@@ -448,8 +451,9 @@ s_cnf sudoku_to_cnf(s_sudoku g) {
     // Get every cells of the current block
     coords *block = get_sudoku_block(g, b);
 
+    // REDUNDANT CLAUSES
     // Ensure it contains every values at least once
-    add_cnf_sudoku_set_complete(cn, g, block, n);
+    // add_cnf_sudoku_set_complete(cn, g, block, n);
 
     // Ensure it contains every values at most once
     add_cnf_sudoku_set_uniq(cn, g, block, n);
