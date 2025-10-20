@@ -63,8 +63,12 @@ int get_pure_litteral(s_cnf cn) {
         int clause_check = clauses[k];
         // If you can find it's opposite in another clause continue searching
         if (s_cnf_clause_contains_litt(cn, clause_check, current_litt * -1)) break;
-        // If the current litteral is pure return it
-        if (k == number_clauses - 1) {
+
+        // If we checked every clauses then the litteral is pure
+        // We also handle the case where the clause we are checking is
+        // the last
+        bool is_last_clause = (k == number_clauses - 1 || i == number_clauses - 1);
+        if (is_last_clause) {
           free(litts);
           free(clauses);
           return current_litt;

@@ -4,32 +4,28 @@
 #include <sys/queue.h>
 
 #include "cnf.h"
+#include "uthash/uthash.h"
 
 
 // ===== STRUCTS =====
 
-// List of litterals
-struct litterals {
-  int val;
-  SLIST_ENTRY(litterals) litterals;
+struct litteral {
+  int litt;
+  UT_hash_handle hh;
 };
 
-SLIST_HEAD(litterals_head, litterals);
-
-// List of clauses (wich contains litterals)
-struct clauses {
+// Clause (wich contains litterals)
+struct clause {
   size_t id;
-  struct litterals_head *litterals;
-  SLIST_ENTRY(clauses) clauses;
+  struct litteral *litterals;
+  UT_hash_handle hh;
 };
-
-SLIST_HEAD(clauses_head, clauses);
 
 // Cnf formula is a list of clauses
-// We hide the slist behind a curtain
+// We hide the hashtable behind the curtain
 typedef struct cnf {
-  int clause_id;
-  struct clauses_head *clauses;
+  int current_clause_id;
+  struct clause *clauses;
 } *s_cnf;
 
 // ===================
@@ -37,59 +33,58 @@ typedef struct cnf {
 
 // ===== PRIVATE =====
 
-/* Frees the whole slist of litterals
- */
-void free_litterals_slist(struct litterals_head *litterals) {
-  while (!SLIST_EMPTY(litterals)) {
-    struct litterals *lit = SLIST_FIRST(litterals); // Get first slist elt (head)
-    SLIST_REMOVE_HEAD(litterals, litterals);        // Remove head from slist
-    free(lit);                                      // Free it
-  }
-  free(litterals);                                  // Free the slist
-}
-
-/* Frees the whole slist of clauses and its
+/* Frees the whole hashmap of litterals and its
  * lists of litterals
  */
-void free_clauses_slist(struct clauses_head *clauses) {
-  while (!SLIST_EMPTY(clauses)) {
-    struct clauses *cl = SLIST_FIRST(clauses);      // Get first slist elt (head)
-    SLIST_REMOVE_HEAD(clauses, clauses);            // Remove head from slist
-    free_litterals_slist(cl->litterals);            // Free litterals slist
-    free(cl);                                       // Free the clause struct
+void free_litterals(struct litteral *litterals) {
+  struct litteral *current_litteral, *tmp;
+
+  HASH_ITER(hh, litterals, current_litteral, tmp) {
+    HASH_DEL(litterals, current_litteral);
+    free(current_litteral);
   }
-  free(clauses);                                    // Free the main slist
+
+  free(litterals);
+}
+
+/* Frees the whole hashmap of clauses and its
+ * lists of litterals
+ */
+void free_clauses(struct clause *clauses) {
+  struct clause *current_clause, *tmp;
+
+  HASH_ITER(hh, clauses, current_clause, tmp) {
+    HASH_DEL(clauses, current_clause);
+    free_litterals(current_clause->litterals);
+    free(current_clause);
+  }
+
+  free(clauses);
 }
 
 /* Returns a pointer to the given clause by its id
  *
  * Returns NULL when not found
  */
-struct clauses *get_clause_by_id(struct clauses_head *clauses, size_t c_id) {
-  struct clauses *cl;
-  SLIST_FOREACH(cl, clauses, clauses) {
-    if (cl->id == c_id) return cl;
-  }
-  return NULL;
+struct clause *get_clause_by_id(struct clause *clauses, size_t c_id) {
+  struct clause *clause;
+
+  HASH_FIND_INT(clauses, &c_id, clause);
+  if (!clause) return NULL;
+  return clause;
 }
 
 /* Return the size of a single clause (aka the number of
  * litterals it contains)
  */
-int get_clause_length(struct clauses *cl) {
-  int length = 0;
-  struct litterals *lit;
-  SLIST_FOREACH(lit, cl->litterals, litterals) length++;
-  return length;
+int get_clause_length(struct clause *cl) {
+  return HASH_COUNT(cl->litterals);
 }
 
 /* Returns the number of clauses in the given cn formula
  */
 int get_nb_clauses(s_cnf cn) {
-  int nb = 0;
-  struct clauses *cl;
-  SLIST_FOREACH(cl, cn->clauses, clauses) nb++;
-  return nb;
+  return HASH_COUNT(cn->clauses);
 }
 
 // ===================
@@ -101,21 +96,13 @@ s_cnf s_cnf_create() {
   s_cnf cn = malloc(sizeof(struct cnf));
   if (!cn) return NULL;
 
-  struct clauses_head *clauses = malloc(sizeof(struct clauses_head));
-  if (!clauses) {
-    free(cn);
-    return NULL;
-  }
-
-  SLIST_INIT(clauses);
-
-  cn->clause_id = 0;
-  cn->clauses = clauses;
+  cn->current_clause_id = 0;
+  cn->clauses = NULL;
   return cn;
 }
 
 void s_cnf_free(s_cnf cn) {
-  free_clauses_slist(cn->clauses); // Free every clauses and every litterals
+  free_clauses(cn->clauses);
   free(cn);
 }
 
@@ -123,43 +110,35 @@ s_cnf s_cnf_copy(s_cnf cn) {
   if (!cn) return NULL;
 
   s_cnf new_cn = s_cnf_create();
-  if (!new_cn) return NULL;
 
   // Create a copy of each clause and append it to
-  // the new list of clauses
-  struct clauses *clause;
-  SLIST_FOREACH(clause, cn->clauses, clauses) {
-    struct clauses *clause_copy = malloc(sizeof(struct clauses));
+  // the new hashmap of clauses
+  struct clause *current_clause, *tmp;
+  HASH_ITER(hh, cn->clauses, current_clause, tmp) {
+    struct clause *clause_copy = malloc(sizeof(struct clause));
     if (!clause_copy) {
       s_cnf_free(new_cn);
       return NULL;
     }
 
-    clause_copy->id = clause->id;
-
-    // Create the litterals list for this clause
-    clause_copy->litterals = malloc(sizeof(struct litterals_head));
-    if (!clause_copy->litterals) {
-      s_cnf_free(new_cn);
-      return NULL;
-    }
-    SLIST_INIT(clause_copy->litterals);
+    clause_copy->id = current_clause->id;
+    clause_copy->litterals = NULL;
 
     // Create a copy of each litteral and append it
-    // to the new list of litterals
-    struct litterals *litteral;
-    SLIST_FOREACH(litteral, clause->litterals, litterals) {
-      struct litterals *litteral_copy = malloc(sizeof(struct litterals));
+    // to the new hashmap of litterals
+    struct litteral *current_litteral, *tmp;
+    HASH_ITER(hh, current_clause->litterals, current_litteral, tmp) {
+      struct litteral *litteral_copy = malloc(sizeof(struct litteral));
       if (!litteral_copy) {
         s_cnf_free(new_cn);
         return NULL;
       }
 
-      litteral_copy->val = litteral->val;
-      SLIST_INSERT_HEAD(clause_copy->litterals, litteral_copy, litterals);
+      litteral_copy->litt = current_litteral->litt;
+      HASH_ADD_INT(clause_copy->litterals, litt, litteral_copy);
     }
 
-    SLIST_INSERT_HEAD(new_cn->clauses, clause_copy, clauses);
+    HASH_ADD_INT(new_cn->clauses, id, clause_copy);
   }
 
   return new_cn;
@@ -174,22 +153,13 @@ int s_cnf_add_clause(s_cnf cn, int *litt, size_t length) {
     if (litt[i] == 0) return -1;
 
   // Create a new clause and add it to the list of clauses
-  struct clauses *clause = malloc(sizeof(struct clauses));
+  struct clause *clause = malloc(sizeof(struct clause));
   if (!clause) return -1;
 
-  clause->id = cn->clause_id++;
+  clause->id = cn->current_clause_id++;
+  clause->litterals = NULL;
 
-  SLIST_INSERT_HEAD(cn->clauses, clause, clauses);
-
-  // Create a new list of litterals and add it to this clause
-  struct litterals_head *litterals = malloc(sizeof(struct litterals_head));
-  if (!litterals) {
-    free(clause);
-    return -1;
-  }
-
-  SLIST_INIT(litterals);
-  clause->litterals = litterals;
+  HASH_ADD_INT(cn->clauses, id, clause);
 
   // If the given list of litterals is empty return directly
   // Nothing to do anymore
@@ -197,16 +167,16 @@ int s_cnf_add_clause(s_cnf cn, int *litt, size_t length) {
 
   // Append every given litterals to the list of litterals
   for (int i = 0; i < length; i++) {
-    struct litterals *lit = malloc(sizeof(struct litterals));
-    if (!lit) {
-      SLIST_REMOVE_HEAD(cn->clauses, clauses); // Remove just inserted clause
-      free_litterals_slist(litterals);         // Free the litterals added
-      free(clause);                            // Free the allocated clause
+    struct litteral *litteral = malloc(sizeof(struct litteral));
+    if (!litteral) {
+      HASH_DEL(cn->clauses, clause);      // Remove just inserted clause
+      free_litterals(clause->litterals);  // Free the litterals
+      free(clause);                       // Free the allocated clause
       return -1;
     }
 
-    lit->val = litt[i];
-    SLIST_INSERT_HEAD(litterals, lit, litterals);
+    litteral->litt = litt[i];
+    HASH_ADD_INT(clause->litterals, litt, litteral);
   }
 
   return clause->id;
@@ -215,14 +185,14 @@ int s_cnf_add_clause(s_cnf cn, int *litt, size_t length) {
 int s_cnf_remove_clause(s_cnf cn, size_t c_id) {
   if (!cn) return 1;
 
-  struct clauses *cl = get_clause_by_id(cn->clauses, c_id);
+  struct clause *cl = get_clause_by_id(cn->clauses, c_id);
   if (!cl) return 1;
 
   // Remove the given clause
-  SLIST_REMOVE(cn->clauses, cl, clauses, clauses);
+  HASH_DEL(cn->clauses, cl);
 
   // Free the clause
-  free_litterals_slist(cl->litterals);
+  free_litterals(cl->litterals);
   free(cl);
 
   return 0;
@@ -231,19 +201,19 @@ int s_cnf_remove_clause(s_cnf cn, size_t c_id) {
 int s_cnf_clause_add_litt(s_cnf cn, size_t c_id, int litt) {
   if (!cn || litt == 0) return 1;
 
-  struct clauses *cl = get_clause_by_id(cn->clauses, c_id);
+  struct clause *cl = get_clause_by_id(cn->clauses, c_id);
   if (!cl) return 1;
 
   // If already contains litt don't add it again
   if (s_cnf_clause_contains_litt(cn, c_id, litt) == 1) return 0;
 
   // Create a new litteral
-  struct litterals *lit = malloc(sizeof(struct litterals));
-  if (!lit) return 1;
+  struct litteral *litteral = malloc(sizeof(struct litteral));
+  if (!litteral) return 1;
 
   // Insert the new litteral
-  lit->val = litt;
-  SLIST_INSERT_HEAD(cl->litterals, lit, litterals);
+  litteral->litt = litt;
+  HASH_ADD_INT(cl->litterals, litt, litteral);
 
   return 0;
 }
@@ -251,17 +221,13 @@ int s_cnf_clause_add_litt(s_cnf cn, size_t c_id, int litt) {
 int s_cnf_clause_remove_litt(s_cnf cn, size_t c_id, int litt) {
   if (!cn || litt == 0) return 1;
 
-  struct clauses *cl = get_clause_by_id(cn->clauses, c_id);
+  struct clause *cl = get_clause_by_id(cn->clauses, c_id);
   if (!cl) return 1;
 
-  struct litterals *lit;
-  SLIST_FOREACH(lit, cl->litterals, litterals) {
-    // Delete the matching litt
-    if (lit->val == litt) {
-      SLIST_REMOVE(cl->litterals, lit, litterals, litterals);
-      free(lit);
-      break;
-    }
+  if (s_cnf_clause_contains_litt(cn, c_id, litt) == 1) {
+    struct litteral *litteral;
+    HASH_FIND_INT(cl->litterals, &litt, litteral);
+    HASH_DEL(cl->litterals, litteral);
   }
 
   return 0;
@@ -270,34 +236,34 @@ int s_cnf_clause_remove_litt(s_cnf cn, size_t c_id, int litt) {
 int s_cnf_clause_empty(s_cnf cn, size_t c_id) {
   if (!cn) return -1;
 
-  struct clauses *cl = get_clause_by_id(cn->clauses, c_id);
+  struct clause *cl = get_clause_by_id(cn->clauses, c_id);
   if (!cl) return -1;
 
-  return SLIST_EMPTY(cl->litterals);
+  if (!cl->litterals)
+    return true;
+  else
+    return HASH_COUNT(cl->litterals) == 0;
 }
 
 int s_cnf_clause_unit(s_cnf cn, size_t c_id) {
   if (!cn) return -1;
 
-  struct clauses *cl = get_clause_by_id(cn->clauses, c_id);
+  struct clause *cl = get_clause_by_id(cn->clauses, c_id);
   if (!cl) return -1;
 
-  return get_clause_length(cl) == 1;
+  return HASH_COUNT(cl->litterals) == 1;
 }
 
 int s_cnf_clause_contains_litt(s_cnf cn, size_t c_id, int litt) {
   if (!cn || litt == 0) return -1;
 
-  struct clauses *cl = get_clause_by_id(cn->clauses, c_id);
+  struct clause *cl = get_clause_by_id(cn->clauses, c_id);
   if (!cl) return -1;
 
-  // Search if the given litteral is in the given clause
-  struct litterals *lit;
-  SLIST_FOREACH(lit, cl->litterals, litterals) {
-    if (lit->val == litt) return 1;
-  }
+  struct litteral *litteral;
+  HASH_FIND_INT(cl->litterals, &litt, litteral);
 
-  return 0;
+  return litteral != NULL;
 }
 
 // ==========================
@@ -316,9 +282,9 @@ size_t *s_cnf_get_clauses_ids(s_cnf cn, size_t *n) {
   if (!clauses_ids) return NULL;
 
   int i = 0;
-  struct clauses *cl;
-  SLIST_FOREACH(cl, cn->clauses, clauses) {
-    clauses_ids[i] = cl->id;
+  struct clause *current_clause, *tmp;
+  HASH_ITER(hh, cn->clauses, current_clause, tmp) {
+    clauses_ids[i] = current_clause->id;
     i++;
   }
 
@@ -328,7 +294,7 @@ size_t *s_cnf_get_clauses_ids(s_cnf cn, size_t *n) {
 int *s_cnf_clause_get_litts(s_cnf cn, size_t c_id, size_t *n) {
   if (!cn || !n) return NULL;
 
-  struct clauses *cl = get_clause_by_id(cn->clauses, c_id);
+  struct clause *cl = get_clause_by_id(cn->clauses, c_id);
   if (!cl) return NULL;
 
   // Size of the array
@@ -339,9 +305,9 @@ int *s_cnf_clause_get_litts(s_cnf cn, size_t c_id, size_t *n) {
   if (!litts) return NULL;
 
   int i = 0;
-  struct litterals *lit;
-  SLIST_FOREACH(lit, cl->litterals, litterals) {
-    litts[i] = lit->val;
+  struct litteral *current_litteral, *tmp;
+  HASH_ITER(hh, cl->litterals, current_litteral, tmp) {
+    litts[i] = current_litteral->litt;
     i++;
   }
 
@@ -359,20 +325,22 @@ void s_cnf_print(s_cnf cn) {
   // Print every clause
   int nb_clauses = get_nb_clauses(cn);
   int clause_i = 0;
-  struct clauses *cl;
-  SLIST_FOREACH(cl, cn->clauses, clauses) {
+
+  struct clause *current_clause, *tmp;
+  HASH_ITER(hh, cn->clauses, current_clause, tmp) {
 
     printf("(");
 
     // Print every litterals in the clause
     int litt_i = 0;
-    int litterals_length = get_clause_length(cl);
-    struct litterals *lit;
-    SLIST_FOREACH(lit, cl->litterals, litterals) {
+    int litterals_length = get_clause_length(current_clause);
+
+    struct litteral *current_litteral, *tmp;
+    HASH_ITER(hh, current_clause->litterals, current_litteral, tmp) {
       printf(" ");
 
-      if (lit->val < 0) printf("¬");
-      printf("x%d ", abs(lit->val));
+      if (current_litteral->litt < 0) printf("¬");
+      printf("x%d ", abs(current_litteral->litt));
 
       if (litt_i < litterals_length - 1) printf("∨");
 
@@ -385,6 +353,7 @@ void s_cnf_print(s_cnf cn) {
 
     clause_i++;
   }
+
   printf("\n");
 }
 

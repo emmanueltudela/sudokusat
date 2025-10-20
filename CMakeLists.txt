@@ -7,7 +7,7 @@ enable_testing()
 
 # Main executable
 
-file(GLOB_RECURSE sources       src/*.c include/*.h)
+file(GLOB_RECURSE sources       src/*.c include/*.h lib/include/*.h)
 
 add_executable(solver ${sources})
 
