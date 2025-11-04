@@ -4,79 +4,10 @@
 
 #include "sudoku.h"
 #include "cnf.h"
+#include "sudoku_cnf.h"
 
 
 // ===== PRIVATE =====
-
-// ===== SAT VARIABLES =====
-
-/* This is a variable for the sat formula.
- *
- * Our sudoku problem can be reduced to a sat problem. By "encoding" our first
- * problem in a var like so, we will be able to "inject" it in a sat formula so
- * that when we solve the sat formula we can solve the sudoku grid by looking
- * at the variables valuations.
- *
- * If this var is found true then we will know that the cell (i, j) contains
- * value. If the negation of this var is found true then we will know that the
- * cell (i, j) does not contain value.
- */
-typedef struct sat_var {
-  int i, j;       // Cell
-  int value;      // Cell value
-  bool is_negation;  // Is this var negative or not ? (x or not(x))
-} sat_var;
-
-/* Returns an integer corresponding to the given sat_var in the given context
- * of the grid (that will be used as a litteral for the sat formula)
- *
- * The "encoding" used garanties one interger per sat_var and is reversible.
- */
-int sat_var_to_litt(s_sudoku g, sat_var v) {
-  int n = s_sudoku_size(g);
-
-  // By encoding this way we are sure that there is only one integer per
-  // variable. The operation is also reversible.
-  int litt = (n * v.i + v.j) * n + v.value;
-
-  // The negation of our litteral is just -litteral
-  if (v.is_negation) litt *= -1;
-
-  return litt;
-}
-
-/* Decote the litteral of the sat formula to it's original meaning
- *
- * Is is simply the opposite operation of sat_var_to_litt
- */
-sat_var litt_to_sat_var(s_sudoku g, int litt) {
-  int n = s_sudoku_size(g);
-
-  sat_var v;
-
-  // Is it a normal variable or the negation of a variable ?
-  if (litt < 0) {
-    v.is_negation = true;
-    litt *= -1;
-  } else {
-    v.is_negation = false;
-  }
-
-  // Get the value
-  v.value = litt % n;
-  litt /= n;
-
-  // Get j
-  v.j = litt % n;
-  litt /= n;
-
-  // Get i
-  v.i = litt;
-
-  return v;
-}
-
-// ======================== (1)
 
 // ===== SUDOKU UTILS ====
 
@@ -383,6 +314,57 @@ void add_cnf_cells_have_one_value(s_cnf cn, s_sudoku g) {
 
 // ===================  (0)
 
+// ===== SAT VARIABLES =====
+
+int sat_var_to_litt(s_sudoku g, sat_var v) {
+  int n = s_sudoku_size(g);
+
+  // By encoding this way we are sure that there is only one integer per
+  // variable. The operation is also reversible.
+  //
+  // Here we multiply by n + 1 before adding the value because
+  // the maximum value is n which would return 0 when doing the
+  // modulo
+  int litt = (n * v.i + v.j) * (n + 1) + v.value;
+
+  // The negation of our litteral is just -litteral
+  if (v.is_negation) litt *= -1;
+
+  return litt;
+}
+
+
+
+sat_var litt_to_sat_var(s_sudoku g, int litt) {
+  int n = s_sudoku_size(g);
+
+  sat_var v;
+
+  // Is it a normal variable or the negation of a variable ?
+  if (litt < 0) {
+    v.is_negation = true;
+    litt *= -1;
+  } else {
+    v.is_negation = false;
+  }
+
+  // Get the value
+  // mod n + 1 because the biggest value is equal to n + 1
+
+  v.value = litt % (n + 1);
+  litt /= n + 1;
+
+  // Get j
+  v.j = litt % n;
+  litt /= n;
+
+  // Get i
+  v.i = litt;
+
+  return v;
+}
+
+// ========================
 
 // ===== BASE FUNCTIONS =====
 

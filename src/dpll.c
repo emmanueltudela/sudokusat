@@ -57,17 +57,14 @@ int get_pure_litteral(s_cnf cn) {
     for (int j = 0; j < number_litts; j++) {
       int current_litt = litts[j];
 
-      // Check if you can find it's opposite in another clause
+      // Check if you can find it's opposite in any clause
       for (int k = 0; k < number_clauses; k++) {
-        if (i == k) continue; // Don't check current clause
         int clause_check = clauses[k];
         // If you can find it's opposite in another clause continue searching
         if (s_cnf_clause_contains_litt(cn, clause_check, current_litt * -1)) break;
 
         // If we checked every clauses then the litteral is pure
-        // We also handle the case where the clause we are checking is
-        // the last
-        bool is_last_clause = (k == number_clauses - 1 || i == number_clauses - 1);
+        bool is_last_clause = k == number_clauses - 1;
         if (is_last_clause) {
           free(litts);
           free(clauses);
@@ -172,6 +169,11 @@ void pure_litteral_assign(s_cnf cn, int litt) {
   }
 }
 
+void append_valuation(int **valuations, size_t *valuations_length, int litt) {
+  *valuations = realloc(*valuations, sizeof(int) * ++(*valuations_length));
+  (*valuations)[*valuations_length - 1] = litt;
+}
+
 // =================================
 
 
@@ -196,7 +198,6 @@ bool dpll_internal(s_cnf cn) {
     return false;
   }
   // DPLL procedure
-  printf("Guess\n");
   int litt = cnf_choose_litteral(cn);
   s_cnf cn_2 = s_cnf_copy(cn);
 
@@ -206,7 +207,51 @@ bool dpll_internal(s_cnf cn) {
   s_cnf_add_clause(cn, &litt1, 1);
   s_cnf_add_clause(cn_2, &litt2, 1);
 
-  return dpll_internal(cn) || dpll_internal(cn_2);
+  bool result = dpll_internal(cn) || dpll_internal(cn_2);
+
+  s_cnf_free(cn_2);
+
+  return result;
+}
+
+bool dpll_valuations_internal(s_cnf cn, int **valuations, size_t *valuations_length) {
+  // Unit propagation
+  int unit_litt = 0;
+  while ((unit_litt = get_unit_clause_litt(cn)) != 0) {
+    if (unit_litt > 0)
+      append_valuation(valuations, valuations_length, unit_litt);
+    unit_propagate(cn, unit_litt);
+  }
+  // Pure literal elimination
+  int pure_litt = 0;
+  while ((pure_litt = get_pure_litteral(cn))) {
+    if (pure_litt > 0)
+      append_valuation(valuations, valuations_length, pure_litt);
+    pure_litteral_assign(cn, pure_litt);
+  }
+  // Stopping conditions
+  if (cnf_is_empty(cn)) {
+    return true;
+  }
+  if (cnf_contains_empty_clause(cn)) {
+    return false;
+  }
+  // DPLL procedure
+  int litt = cnf_choose_litteral(cn);
+  s_cnf cn_2 = s_cnf_copy(cn);
+
+  int litt1 = litt;
+  int litt2 = -1 * litt;
+
+  s_cnf_add_clause(cn, &litt1, 1);
+  s_cnf_add_clause(cn_2, &litt2, 1);
+
+  bool result = dpll_valuations_internal(cn, valuations, valuations_length)
+                || dpll_valuations_internal(cn_2, valuations, valuations_length);
+
+  s_cnf_free(cn_2);
+
+  return result;
 }
 
 // ==========================
@@ -216,7 +261,20 @@ bool dpll_internal(s_cnf cn) {
 
 bool dpll(s_cnf cn) {
   s_cnf cn_copy = s_cnf_copy(cn);
-  return dpll_internal(cn_copy);
+  bool result = dpll_internal(cn_copy);
+
+  s_cnf_free(cn_copy);
+
+  return result;
+}
+
+bool dpll_valuations(s_cnf cn, int **valuations, size_t *valuations_length) {
+  s_cnf cn_copy = s_cnf_copy(cn);
+  bool result = dpll_valuations_internal(cn_copy, valuations, valuations_length);
+
+  s_cnf_free(cn_copy);
+
+  return result;
 }
 
 // =========================

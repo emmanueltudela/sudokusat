@@ -52,6 +52,17 @@ add_test(NAME test_s_cnf_get_clauses_ids COMMAND test_cnf test_s_cnf_get_clauses
 add_test(NAME test_s_cnf_clause_get_litts COMMAND test_cnf test_s_cnf_clause_get_litts)
 add_test(NAME test_s_cnf_print COMMAND test_cnf test_s_cnf_print)
 
+# Test sudoku_cnf
+
+add_executable(test_sudoku_cnf test/test_sudoku_cnf.c src/sudoku_cnf.c src/cnf.c src/sudoku.c)
+
+target_link_libraries(test_sudoku_cnf PUBLIC m)
+target_compile_options(test_sudoku_cnf PUBLIC -std=c99 -Wall -g)
+target_include_directories(test_sudoku_cnf PUBLIC include)
+
+add_test(NAME test_sat_var_to_litt COMMAND test_sudoku_cnf test_sat_var_to_litt)
+add_test(NAME test_litt_to_sat_var COMMAND test_sudoku_cnf test_litt_to_sat_var)
+
 # Test DPLL
 
 add_executable(test_dpll test/test_dpll.c src/cnf.c)
