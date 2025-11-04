@@ -6,8 +6,17 @@
 #include "sudoku_cnf.h"
 #include "dpll.h"
 
-int main(void) {
-  s_sudoku g = s_sudoku_create_from_file("../data/test5.txt");
+void usage(char *exec) {
+  printf("%s <filename>\n", exec);
+}
+
+int main(int argc, char *argv[]) {
+  if (argc != 2) {
+    usage(argv[0]);
+    exit(EXIT_FAILURE);
+  }
+
+  s_sudoku g = s_sudoku_create_from_file(argv[1]);
   if (!g) return EXIT_FAILURE;
 
   s_sudoku_print(stdout, g);
